@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
-import { AuthService } from '../../login/auth.service';
+import { LoginService } from '../../login/login.service';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
-  constructor(private authService: AuthService) {
+  constructor(private loginService: LoginService) {
     super({ usernameField: 'email' }); 
   }
 
@@ -19,13 +19,11 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
 
     console.log('🟡 LocalStrategy.validate called with:', email,"and password length:", password.length);
 
-    const user = await this.authService.validateUser(email, password);
-    console.log('🟡 LocalStrategy.validate result for', email, ':', user);
-
-    if (user === null || user.email === " User not found" || user.password === " Invalid password") {
+    const user = await this.loginService.validateUser(email, password);
+    console.log('🟡 LocalStrategy.validate result for:', user);
+    if (!user ||  user === null || user.email === " User not found" || user.password === "Invalid password") {
       throw new UnauthorizedException('Invalid email or password');
     }
     return user; 
-
   }
 }

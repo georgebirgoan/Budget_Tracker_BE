@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from '../login/auth.controller';
-import { UserService } from 'src/modules/auth/register/user.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoginService } from './login.service';
+import { LoginController } from '../login/login.controller';
+import { RegisterService } from 'src/modules/auth/register/register.service';
 import { User } from 'src/entities/user.entity';
 import { LocalStrategy } from '../common/strategies/local.strategy';
-import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from '../common/config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from '../common/strategies/jwt.strategy';
@@ -14,24 +12,20 @@ import { RefreshJwtStrategy } from '../common/strategies/refresh.strategy';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from '../common/guards/roles/roles.guard';
 import googleOauthConfig from '../common/config/google-oauth.config';
-import { GoogleStrategy } from '../common/strategies/google.strategy';
+import { AuthModule } from '../auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    JwtModule.registerAsync(jwtConfig.asProvider()),
-    ConfigModule.forFeature(jwtConfig),
-    ConfigModule.forFeature(refreshJwtConfig),
-    ConfigModule.forFeature(googleOauthConfig),
-  ],
-  controllers: [AuthController],
+    AuthModule
+   ],
+  controllers: [LoginController],
   providers: [
-    AuthService,
-    UserService,
+    LoginService,
+    RegisterService,
     LocalStrategy,
     JwtStrategy,
     RefreshJwtStrategy,
-    GoogleStrategy,
+    //GoogleStrategy,
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard, //@UseGuards(JwtAuthGuard) applied on all API endppints
@@ -42,4 +36,4 @@ import { GoogleStrategy } from '../common/strategies/google.strategy';
     },
   ],
 })
-export class AuthModule {}
+export class LoginModule {}

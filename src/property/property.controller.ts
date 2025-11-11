@@ -30,32 +30,32 @@ import { PaginationDTO } from './dto/pagination.dto';
 export class PropertyController {
   constructor(private propertyService: PropertyService) {}
 
-  @Get()
-  findAll(@Query() paginationDTO: PaginationDTO) {
-    return this.propertyService.findAll(paginationDTO);
-  }
+  // // @Get()
+  // // findAll(@Query() paginationDTO: PaginationDTO) {
+  // //   return this.propertyService.findAll(paginationDTO);
+  // // }
 
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id) {
-    return this.propertyService.findOne(id);
-  }
+  // // @Get(':id')
+  // // findOne(@Param('id', ParseIntPipe) id) {
+  // //   return this.propertyService.findOne(id);
+  // // }
 
-  @Post()
-  create(@Body() dto: CreatePropertyDto) {
-    return this.propertyService.create(dto);
-  }
+  // // @Post()
+  // // create(@Body() dto: CreatePropertyDto) {
+  // //   return this.propertyService.create(dto);
+  // // }
 
-  @Patch(':id')
-  update(
-    @Param('id', ParseIdPipe) id,
-    @Body()
-    body: UpdatePropertyDto,
-  ) {
-    return this.propertyService.update(id, body);
-  }
+  // // @Patch(':id')
+  // // update(
+  // //   @Param('id', ParseIdPipe) id,
+  // //   @Body()
+  // //   body: UpdatePropertyDto,
+  // // ) {
+  // //   return this.propertyService.update(id, body);
+  // // }
 
-  @Delete(':id')
-  delete(@Param('id', ParseIdPipe) id) {
-    return this.propertyService.delete(id);
-  }
+  // // @Delete(':id')
+  // // delete(@Param('id', ParseIdPipe) id) {
+  // //   return this.propertyService.delete(id);
+  // }
 }

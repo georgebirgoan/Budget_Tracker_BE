@@ -8,7 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { LoginService } from './login.service';
 import { LocalAuthGuard } from '../common/guards/local-auth/local-auth.guard';
 import { RefreshAuthGuard } from '../common/guards/refresh-auth/refresh-auth.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth/jwt-auth.guard';
@@ -18,12 +18,13 @@ import { LoginUserDto } from '../dto/login.dto';
 import { Body } from '@nestjs/common/decorators';
 import {Session ,AllowAnonymous,OptionalAuth} from '@thallesp/nestjs-better-auth';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { ApiOperation,ApiResponse } from '@nestjs/swagger';
 
 
 @Controller('auth')
-export class AuthController {
+export class LoginController {
   constructor(
-    private authService: AuthService,
+    private LoginService: LoginService,
   ) {}
 
   @Public()
@@ -49,21 +50,25 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Req() req,@Body() loginDto:LoginUserDto) {
-      return this.authService.login(req.user.id,loginDto);
-  }
+    @ApiOperation({summary:"User login"})
+    @ApiResponse({status:200,description:"User succes login"})
+    @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+    create(@Req() req,@Body() loginUserDto: LoginUserDto) {
+      return this.LoginService.login(req.user.id);
+    }
+ 
   
 
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
   refreshToken(@Req() req) {
-    return this.authService.refreshToken(req.user.id);
+    return this.LoginService.refreshTokens(req.user.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('signout')
   signOut(@Req() req) {
-    this.authService.signOut(req.user.id);
+    this.LoginService.signOut(req.user.id);
   }
 
 @Get('google/login')
@@ -71,14 +76,14 @@ export class AuthController {
 async googleLogin() {}
 
  /*doar web*/
-@UseGuards(GoogleAuthGuard)
-@Get('google/callback')
-async googleCallback(@Req() req,@Res() res) {
-  console.log('✅ Entered AuthController.googleCallback()',req.user);
-  const response = await this.authService.login(req.user.id,req.user);
+// @UseGuards(GoogleAuthGuard)
+// @Get('google/callback')
+// async googleCallback(@Req() req,@Res() res) {
+//   console.log('✅ Entered AuthController.googleCallback()',req.user);
+//   const response = await this.LoginService.login(req.user.id);
 
-  return res.redirect(`http://localhost:8081/auth/callback?token=${response.accessToken}`);
-}
+//   return res.redirect(`http://localhost:8081/auth/callback?token=${response.accessToken}`);
+// }
 
 // @UseGuards(GoogleAuthGuard)
 // @Get('google/callback')

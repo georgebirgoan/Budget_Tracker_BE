@@ -1,28 +1,24 @@
+import { PrismaModule } from './prisma/prisma.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PropertyModule } from './property/property.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigModule } from '@nestjs/config';
-import { UserModule } from './modules/auth/register/user.module';
-import { AuthModule } from './modules/auth/login/auth.module';
-import dbConfig from './config/db.config';
-import dbConfigProduction from './config/db.config.production';
+import { RegisterModule } from './modules/auth/register/register.module';
+import {  LoginModule } from './modules/auth/login/login.module';
+import jwtConfig from './modules/auth/common/config/jwt.config';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [jwtConfig],
       expandVariables: true,
-      load: [dbConfig, dbConfigProduction],
     }),
+    PrismaModule,
     PropertyModule,
-    TypeOrmModule.forRootAsync({
-      useFactory:
-        process.env.NODE_ENV === 'production' ? dbConfigProduction : dbConfig,
-    }),
-    UserModule,
     AuthModule,
   ],
   controllers: [AppController],

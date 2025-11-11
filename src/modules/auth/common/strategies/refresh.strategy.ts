@@ -5,7 +5,7 @@ import { AuthJwtPayload } from '../types/auth-jwtPayload';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import refreshJwtConfig from '../config/refresh-jwt.config';
 import { Request } from 'express';
-import { AuthService } from '../../login/auth.service';
+import { LoginService } from '../../login/login.service';
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(
@@ -15,7 +15,7 @@ export class RefreshJwtStrategy extends PassportStrategy(
   constructor(
     @Inject(refreshJwtConfig.KEY)
     private refrshJwtConfiguration: ConfigType<typeof refreshJwtConfig>,
-    private authService: AuthService,
+    private  loginService: LoginService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -34,6 +34,6 @@ export class RefreshJwtStrategy extends PassportStrategy(
     }
     const refreshToken = authHeader.replace(/^Bearer\s+/i, '').trim();
     const userId = payload.sub;
-    return this.authService.validateRefreshToken(userId, refreshToken);
+    // return this.loginService.validateRefreshToken(userId, refreshToken);
   }
 }

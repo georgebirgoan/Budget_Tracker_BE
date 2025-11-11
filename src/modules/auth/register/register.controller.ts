@@ -8,22 +8,33 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { UserService } from './user.service';
+import { RegisterService } from './register.service';
 import { CreateUserDto } from '../dto/register.dto.';
 import { JwtAuthGuard } from 'src/modules/auth/common/guards/jwt-auth/jwt-auth.guard';
 import { Role } from 'src/modules/auth/common/enums/role.enum';
 import { Roles } from 'src/modules/auth/common/decorators/roles.decorator';
 import { Public } from '../common/decorators/public.decorator';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 
-@Controller('user')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
+@ApiTags('auth')
+@Controller('auth')
+export class RegisterController {
+  constructor(private readonly userService: RegisterService) {}
 
-  @Public()
-  @Post()
+ 
+
+  @Post('register')
+  @ApiOperation({summary:"User register"})
+  @ApiResponse({status:200,description:"User succes register"})
+  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
+  }
+
+  @Get('getUser/:id')
+  getUserByIdTest(@Param('id') id:string ){
+    return this.userService.findById(Number(id));
   }
 
   @UseGuards(JwtAuthGuard)

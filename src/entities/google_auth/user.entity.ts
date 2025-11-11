@@ -33,6 +33,7 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
+
   // Relations
   @OneToMany(() => Session, (session) => session.user, { cascade: true })
   sessions: Session[];

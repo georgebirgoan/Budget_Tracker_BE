@@ -1,113 +1,90 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/modules/auth/register/user.service';
-import { AuthJwtPayload } from 'src/modules/auth/common/types/auth-jwtPayload';
-import refreshJwtConfig from '../common/config/refresh-jwt.config';
-import type { ConfigType } from '@nestjs/config';
-import { CurrentUser } from 'src/modules/auth/common/types/current-user';
-import { CreateUserDto } from 'src/modules/auth/dto/register.dto.';
-import * as bcrypt from 'bcrypt';
-import { LoginUserDto } from '../dto/login.dto';
+// import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+// import { JwtService } from '@nestjs/jwt';
+// import { RegisterService } from 'src/modules/auth/register/register.service';
+// import { AuthJwtPayload } from 'src/modules/auth/common/types/auth-jwtPayload';
+// import refreshJwtConfig from '../common/config/refresh-jwt.config';
+// import jwtConfig from '../common/config/jwt.config';
+// import type { ConfigType } from '@nestjs/config';
+// import * as bcrypt from 'bcrypt';
+// import { LoginUserDto } from '../dto/login.dto';
+// import { CurrentUser } from 'src/modules/auth/common/types/current-user';
+
+// @Injectable()
+// export class AuthService {
+//   constructor(
+//     // private userService: RegisterService,
+//     // private jwtService: JwtService,
+//     // @Inject(jwtConfig.KEY)
+//     // private jwtCfg: ConfigType<typeof jwtConfig>,
+//     // @Inject(refreshJwtConfig.KEY)
+//     // private refreshCfg: ConfigType<typeof refreshJwtConfig>,
+//   ) {}
+
+//   /** ✅ Step 1: Validate email + password */
+//   async validateUser(email: string, password: string) {
+//     const user = await this.userService.findByEmail(email);
+//     if (!user) throw new UnauthorizedException('User not found');
+
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) throw new UnauthorizedException('Invalid password');
+
+//     return user;
+//   }
+
+//   /** ✅ Step 2: Generate access + refresh tokens */
+//   private async generateTokens(userId: number) {
+//     const payload: AuthJwtPayload = { sub: userId };
+
+//   const accessToken = await this.jwtService.signAsync(payload, {
+//   secret: this.jwtCfg.secret,
+//   expiresIn: this.jwtCfg.expiresIn as any,
+// });
 
 
-@Injectable()
-export class AuthService {
-  constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
-    @Inject(refreshJwtConfig.KEY)
-    private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
-  ) {}
+//     const refreshToken = await this.jwtService.signAsync(payload, {
+//       secret: this.refreshCfg.secret,
+//       expiresIn: this.refreshCfg.expiresIn as any,
+//     });
 
+//     return { accessToken, refreshToken };
+//   }
 
-    async validateUser(email:string, password:string) {
-      const user = await this.userService.findByEmail(email);
+//   /** ✅ Step 3: Login flow */
+//   async login(user: { id: number; email: string }) {
+//     const { accessToken, refreshToken } = await this.generateTokens(user.id);
 
-      if (!user){
-        throw new UnauthorizedException('User not found');
-      }
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        throw new UnauthorizedException('Invalid password');
-        }
+//     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+//     await this.userService.updateHashedRefreshToken(user.id, hashedRefreshToken);
 
-      return user;
-  }
+//     return {
+//       id: user.id,
+//       accessToken,
+//       refreshToken,
+//     };
+//   }
 
-  
-    async login(userId: number,loginDto:LoginUserDto)
-     {
+//   /** ✅ Step 4: Validate + renew refresh token */
+//   async refreshTokens(userId: number, refreshToken: string) {
+//     const user = await this.userService.findOne(userId);
+//     if (!user || !user.hashedRefreshToken)
+//       throw new UnauthorizedException('No stored refresh token');
 
-      const {email,password}=loginDto;
-      console.log("Login attempt for:", email);
-      console.log("Password length:", password ? password : 'no password');
+//     const isValid = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+//     if (!isValid) throw new UnauthorizedException('Invalid refresh token');
 
-      const { accessToken, refreshToken } = await this.generateTokens(userId);
-      const saltRounds = 10;
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, saltRounds);
+//     return this.login({ id: user.id, email: user.email });
+//   }
 
-      await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
-      return {
-        id: userId,
-        accessToken,
-        refreshToken,
-      };
-    }
+//   /** ✅ Step 5: Logout (invalidate refresh token) */
+//   async signOut(userId: number) {
+//     await this.userService.updateHashedRefreshToken(userId, '');
+//   }
 
-
-  async generateTokens(userId: number) {
-    const payload: AuthJwtPayload = { sub: userId };
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload),
-      this.jwtService.signAsync(payload, this.refreshTokenConfig),
-    ]);
-    return {
-      accessToken,
-      refreshToken,
-    };
-  }
-
-  async refreshToken(userId: number) {
-    const { accessToken, refreshToken } = await this.generateTokens(userId);
-      const saltRounds = 10;
-    const hashedRefreshToken = await bcrypt.hash(refreshToken,saltRounds);
-    await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
-    return {
-      id: userId,
-      accessToken,
-      refreshToken,
-    };
-  }
-
-  async validateRefreshToken(userId: number, refreshToken: string) {
-    const user = await this.userService.findOne(userId);
-    if (!user || !user.hashedRefreshToken)
-      throw new UnauthorizedException('Invalid Refresh Token');
-
-    const refreshTokenMatches = await bcrypt.compare(
-      user.hashedRefreshToken,
-      refreshToken,
-    );
-    if (!refreshTokenMatches)
-      throw new UnauthorizedException('Invalid Refresh Token');
-
-    return { id: userId };
-  }
-
-  async signOut(userId: number) {
-    await this.userService.updateHashedRefreshToken(userId, '');
-  }
-
-  async validateJwtUser(userId: number) {
-    const user = await this.userService.findOne(userId);
-    if (!user) throw new UnauthorizedException('User not found!');
-    const currentUser: CurrentUser = { id: user.id, role: user.role };
-    return currentUser;
-  }
-
-  async validateGoogleUser(googleUser: CreateUserDto) {
-    const user = await this.userService.findByEmail(googleUser.email);
-    if (user) return user;
-    return await this.userService.create(googleUser);
-  }
-}
+//   /** ✅ Used by JwtStrategy */
+//   async validateJwtUser(userId: number) {
+//     const user = await this.userService.findOne(userId);
+//     if (!user) throw new UnauthorizedException('User not found!');
+//     const currentUser: CurrentUser = { id: user.id };
+//     return currentUser;
+//   }
+// }
