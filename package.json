@@ -6,10 +6,10 @@
   "private": true,
   "license": "UNLICENSED",
 "scripts": {
-    "deploy:migrate": "prisma migrate deploy",
+  "deploy:migrate": "prisma migrate deploy",
+  "start": "nest start",
+  "start:dev": "nest start --watch",
   "build": "node node_modules/@nestjs/cli/bin/nest.js build",
-  "start": "node dist/main.js",
-  "start:dev": "node node_modules/@nestjs/cli/bin/nest.js start --watch",
   "start:debug": "node node_modules/@nestjs/cli/bin/nest.js start --debug --watch",
   "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
   "start:prod": "node dist/main",
@@ -21,6 +21,10 @@
   "test:e2e": "jest --config ./test/jest-e2e.json"
 },
 
+"test":{
+     "start": "node dist/main.js",
+   "start:dev": "node node_modules/@nestjs/cli/bin/nest.js start --watch"
+},
   "dependencies": {
     "@faker-js/faker": "^10.1.0",
     "@nestjs/cli": "^11.0.10",
