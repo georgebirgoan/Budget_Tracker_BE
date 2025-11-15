@@ -83,9 +83,7 @@ export class LoginService {
   }
 
   /** ✅ 3. Login user (generate + store hashed refresh token) */
-
   async login(req:Request,userId: number) {
-    console.log("AJUNGE FUNCTIE LOGIN");
     const user = await this.prisma.user.findUnique({
       where: { id: userId, },
     });
@@ -109,6 +107,7 @@ export class LoginService {
     const deviceName = this.extractDeviceName(userAgent);
 
 
+
     const session = await this.prisma.session.create({
     data: {
       userId: user.id,
@@ -119,9 +118,6 @@ export class LoginService {
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 zile
     },
   });
-    console.log("acces token in login",accessToken);
-    console.log("refresh token in login",refreshToken);
-    console.log("sesion",session);
 
 
     // 5️⃣ Return the tokens
