@@ -37,6 +37,8 @@ export class RegisterService {
           email: createUserDto.email,
           password: hashPass,
           fullName: createUserDto.fullName ?? 'defaultName',
+          role:'ADMIN',
+          isActive:false
         },
       });
      
@@ -45,9 +47,7 @@ export class RegisterService {
     user: {
       id: savedUser.id,
       email: savedUser.email,
-      fullName: savedUser.fullName,
-      role:'ADMIN',
-      isActive:false
+      fullName: savedUser.fullName
     },
   };
 

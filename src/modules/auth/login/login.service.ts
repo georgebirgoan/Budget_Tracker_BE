@@ -9,6 +9,8 @@ import * as bcrypt from 'bcrypt';
 import { CurrentUser } from 'src/modules/auth/common/types/current-user';
 import { CreateUserDto } from 'src/modules/auth/dto/register.dto.';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Request } from 'express'
+import { LoginUserDto } from '../dto/login.dto';
 
 @Injectable()
 export class LoginService {
@@ -23,6 +25,29 @@ export class LoginService {
     @Inject(refreshJwtConfig.KEY)
     private readonly refreshCfg: ConfigType<typeof refreshJwtConfig>,
   ) {}
+
+  extractDeviceName(userAgent: string | null): string {
+  if (!userAgent) return "Unknown Device";
+
+  const ua = userAgent.toLowerCase();
+  console.log("ua:",ua);
+
+  if (ua.includes("iphone")) return "iPhone";
+  if (ua.includes("ipad")) return "iPad";
+  if (ua.includes("android")) return "Android Device";
+
+  if (ua.includes("windows")) return "Windows PC";
+  if (ua.includes("macintosh") || ua.includes("mac os")) return "Mac";
+  if (ua.includes("linux")) return "Linux PC";
+
+  if (ua.includes("chrome")) return "Chrome Browser";
+  if (ua.includes("firefox")) return "Firefox Browser";
+  if (ua.includes("safari")) return "Safari Browser";
+  if (ua.includes("edge")) return "Microsoft Edge";
+
+  return "Unknown Device";
+}
+
 
   /** ✅ 1. Validate email + password */
   async validateUser(email: string, password: string) {
@@ -58,11 +83,13 @@ export class LoginService {
   }
 
   /** ✅ 3. Login user (generate + store hashed refresh token) */
-  async login(userId: number) {
+
+  async login(req:Request,userId: number) {
     console.log("AJUNGE FUNCTIE LOGIN");
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId, },
     });
+
     console.log("user din prisma:",user);
 
     if (!user) throw new Error('User not found!!');
@@ -71,29 +98,51 @@ export class LoginService {
       user.id,
     );
 
+    const refreshTokenHash = await bcrypt.hash(refreshToken,10);
+
+     const ipAddress =
+    req.headers['x-forwarded-for']?.toString() ||
+    req.socket.remoteAddress ||
+    null;
+
+    const userAgent = req.headers['user-agent'] || null;
+    const deviceName = this.extractDeviceName(userAgent);
+
+
+    const session = await this.prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken: refreshTokenHash,
+      ipAddress,
+      userAgent,
+      deviceName,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 zile
+    },
+  });
     console.log("acces token in login",accessToken);
     console.log("refresh token in login",refreshToken);
+    console.log("sesion",session);
 
-    // 3️⃣ Hash refresh token for storage
-    const hashedRefresh = await bcrypt.hash(refreshToken, 10);
-
-    // 4️⃣ Save hashed refresh token in DB
-    // await this.prisma.user.update({
-    //   where: { id: user.id },
-    // });
 
     // 5️⃣ Return the tokens
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-      },
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
-    };
-
+    user: {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+    },
+    tokens: {
+      accessToken,
+      refreshToken: refreshToken, // îl vei pune în cookie pe front
+    },
+    session: {
+      id: session.id,
+      ipAddress: session.ipAddress,
+      userAgent: session.userAgent,
+      deviceName: session.deviceName,
+      expiresAt: session.expiresAt,
+    },
+  };
   }
 
   async validateRefreshToken(refreshToken: string) {

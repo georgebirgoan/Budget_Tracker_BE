@@ -53,8 +53,8 @@ export class LoginController {
     @ApiOperation({summary:"User login"})
     @ApiResponse({status:200,description:"User succes login"})
     @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-    create(@Req() req,@Body() loginUserDto: LoginUserDto) {
-      return this.LoginService.login(req.user.id);
+    create(@Req() req) {
+      return this.LoginService.login(req,req.user.id);
     }
  
   
