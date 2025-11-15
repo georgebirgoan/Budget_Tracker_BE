@@ -78,10 +78,9 @@ export class LoginService {
     const hashedRefresh = await bcrypt.hash(refreshToken, 10);
 
     // 4️⃣ Save hashed refresh token in DB
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { hashedRefreshToken: hashedRefresh },
-    });
+    // await this.prisma.user.update({
+    //   where: { id: user.id },
+    // });
 
     // 5️⃣ Return the tokens
     return {
@@ -109,12 +108,12 @@ export class LoginService {
 
       // 2. Get user from DB
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (!user || !user.hashedRefreshToken) {
+      if (!user) {
         throw new UnauthorizedException('No refresh token stored');
       }
 
       // 3. Compare hashed refresh token in DB
-      const isMatch = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+      const isMatch = await bcrypt.compare(refreshToken);
       if (!isMatch) throw new UnauthorizedException('Invalid refresh token');
 
       // 4. Return user if valid
@@ -131,7 +130,7 @@ export class LoginService {
       if (!user) throw new UnauthorizedException();
 
       const { accessToken, refreshToken } = await this.generateTokens(user.id);
-      await this.userService.updateHashedRefreshToken(user.id, refreshToken);
+     // await this.userService.updateHashedRefreshToken(user.id);
 
       return { accessToken, refreshToken };
   }
@@ -141,7 +140,7 @@ export class LoginService {
 
   /** ✅ 5. Logout user (clear refresh token) */
   async signOut(userId: number) {
-    await this.userService.updateHashedRefreshToken(userId, '');
+    //await this.userService.updateHashedRefreshToken(userId, '');
   }
 
   

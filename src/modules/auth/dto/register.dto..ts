@@ -26,16 +26,5 @@ export class CreateUserDto {
   })
   password: string;
 
-  @IsString()
-  @ApiProperty({
-    example:"USER",description:"User role!"
-  })
-  role:string
-
-  @IsBoolean()
-  @ApiProperty({
-    example:"false",description:"User active or not!"
-  })
-  isActive:boolean
 
 }

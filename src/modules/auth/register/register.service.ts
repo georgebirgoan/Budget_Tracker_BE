@@ -36,7 +36,7 @@ export class RegisterService {
         data: {
           email: createUserDto.email,
           password: hashPass,
-          fullName: createUserDto.fullName ?? null,
+          fullName: createUserDto.fullName ?? 'defaultName',
         },
       });
      
@@ -46,6 +46,8 @@ export class RegisterService {
       id: savedUser.id,
       email: savedUser.email,
       fullName: savedUser.fullName,
+      role:'ADMIN',
+      isActive:false
     },
   };
 
@@ -58,12 +60,11 @@ export class RegisterService {
   /**
    * Updates the hashed refresh token for a user.
    */
-  async updateHashedRefreshToken(userId: number, hashedRefreshToken: string) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { hashedRefreshToken },
-    });
-  }
+  // async updateHashedRefreshToken(userId: number) {
+  //   return this.prisma.user.update({
+  //     where: { id: userId }
+  //   });
+  // }
 
   /**
    * Finds a user by email.
@@ -95,8 +96,6 @@ export class RegisterService {
         fullName: true,
         email: true,
         password: true,
-        hashedRefreshToken: true,
-        // Add any other fields you want returned
       },
     });
   }
