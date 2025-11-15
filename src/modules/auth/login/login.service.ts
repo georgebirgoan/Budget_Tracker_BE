@@ -49,7 +49,7 @@ export class LoginService {
 }
 
 
-  /** ✅ 1. Validate email + password */
+  /** 1. Validate email + password */
   async validateUser(email: string, password: string) {
     console.log("email validare",email);
     const user = await this.prisma.user.findUnique({
@@ -65,7 +65,7 @@ export class LoginService {
     return user;
   }
 
-  /** ✅ 2. Generate both access & refresh tokens */
+  /** 2. Generate both access & refresh tokens */
   private async generateTokens(userId: number) {
     const payload: AuthJwtPayload = { sub: userId };
 
@@ -82,7 +82,7 @@ export class LoginService {
     return { accessToken, refreshToken };
   }
 
-  /** ✅ 3. Login user (generate + store hashed refresh token) */
+  /**  3. Login user */
   async login(req:Request,userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId, },
@@ -119,8 +119,6 @@ export class LoginService {
     },
   });
 
-
-    // 5️⃣ Return the tokens
     return {
     user: {
       id: user.id,
@@ -143,7 +141,6 @@ export class LoginService {
 
   async validateRefreshToken(refreshToken: string) {
     try {
-      // 1. Decode & verify using refresh secret
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.refreshCfg.secret,
       });
@@ -151,17 +148,14 @@ export class LoginService {
       const userId = payload.sub;
       if (!userId) throw new UnauthorizedException('Invalid refresh token payload');
 
-      // 2. Get user from DB
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (!user) {
         throw new UnauthorizedException('No refresh token stored');
       }
 
-      // 3. Compare hashed refresh token in DB
       const isMatch = await bcrypt.compare(refreshToken);
       if (!isMatch) throw new UnauthorizedException('Invalid refresh token');
 
-      // 4. Return user if valid
       return user;
     } catch (err) {
       console.error('❌ Refresh token validation failed:', err.message);
@@ -169,28 +163,22 @@ export class LoginService {
     }
   }
 
-  /** ✅ 4. Refresh token flow (verify + issue new tokens) */
   async refreshTokens(token:string) {
       const user = await this.validateRefreshToken(token);
       if (!user) throw new UnauthorizedException();
 
       const { accessToken, refreshToken } = await this.generateTokens(user.id);
-     // await this.userService.updateHashedRefreshToken(user.id);
 
       return { accessToken, refreshToken };
   }
 
 
-  
-
-  /** ✅ 5. Logout user (clear refresh token) */
+  /**5. Logout user */
   async signOut(userId: number) {
     //await this.userService.updateHashedRefreshToken(userId, '');
   }
 
-  
 
-  /** ✅ 6. Used by JwtStrategy to attach user to request */
   async validateJwtUser(userId: number) {
     const user = await this.userService.findOne(userId);
     if (!user) throw new UnauthorizedException('User not found!');
@@ -198,7 +186,6 @@ export class LoginService {
     return currentUser;
   }
 
-  /** ✅ 7. Handle Google login/register */
   async validateGoogleUser(googleUser: CreateUserDto) {
     const user = await this.userService.findByEmail(googleUser.email);
     if (user) return user;
