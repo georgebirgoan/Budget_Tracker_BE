@@ -37,12 +37,13 @@ export class LoginController {
     return { user: session.user };
   }
   @Get('public')
-  @AllowAnonymous() // Allow anonymous access
   async getPublic() {
     return { message: 'Public route' };
   }
+
+
   @Get('optional')
-  @OptionalAuth() // Authentication is optional
+  @OptionalAuth() 
   async getOptional(@Session() session: UserSession) {
     return { authenticated: !!session };
   }

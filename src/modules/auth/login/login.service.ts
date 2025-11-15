@@ -88,8 +88,6 @@ export class LoginService {
       where: { id: userId, },
     });
 
-    console.log("user din prisma:",user);
-
     if (!user) throw new Error('User not found!!');
 
     const { accessToken, refreshToken } = await this.generateTokens(
@@ -105,8 +103,6 @@ export class LoginService {
 
     const userAgent = req.headers['user-agent'] || null;
     const deviceName = this.extractDeviceName(userAgent);
-
-
 
     const session = await this.prisma.session.create({
     data: {
@@ -127,7 +123,7 @@ export class LoginService {
     },
     tokens: {
       accessToken,
-      refreshToken: refreshToken, // îl vei pune în cookie pe front
+      refreshToken: refreshToken, 
     },
     session: {
       id: session.id,
@@ -158,7 +154,7 @@ export class LoginService {
 
       return user;
     } catch (err) {
-      console.error('❌ Refresh token validation failed:', err.message);
+      console.error(' Refresh token validation failed:', err.message);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
