@@ -37,7 +37,7 @@ export class RegisterService {
           email: createUserDto.email,
           password: hashPass,
           fullName: createUserDto.fullName ?? 'defaultName',
-          role:'USER',
+          role:'ADMIN',
           isActive:false
         },
       });

@@ -9,8 +9,8 @@ import * as bcrypt from 'bcrypt';
 import { CurrentUser } from 'src/modules/auth/common/types/current-user';
 import { CreateUserDto } from 'src/modules/auth/dto/register.dto.';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Request } from 'express'
-import { LoginUserDto } from '../dto/login.dto';
+import { Request, Response } from 'express'
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class LoginService {
@@ -66,8 +66,8 @@ export class LoginService {
   }
 
   /** 2. Generate both access & refresh tokens */
-  private async generateTokens(userId: number) {
-    const payload: AuthJwtPayload = { sub: userId };
+  private async generateTokens(userId: number,email1:string,fullName1:string | '',role1:Role) {
+    const payload: AuthJwtPayload = { sub: userId,email:email1,fullName:fullName1,role:role1};
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtCfg.secret,
@@ -83,58 +83,131 @@ export class LoginService {
   }
 
   /**  3. Login user */
-  async login(req:Request,userId: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId, },
-    });
+  // async login(req:Request,userId: number) {
+  //   const user = await this.prisma.user.findUnique({
+  //     where: { id: userId, },
+  //   });
 
-    if (!user) throw new Error('User not found!!');
+  //   if (!user) throw new Error('User not found!!');
+
+  //   const { accessToken, refreshToken } = await this.generateTokens(
+  //     user.id,
+  //     user.email,
+  //     user.fullName || '',
+  //     user.role
+  //   );
+
+  //   const refreshTokenHash = await bcrypt.hash(refreshToken,10);
+
+  //    const ipAddress =
+  //   req.headers['x-forwarded-for']?.toString() ||
+  //   req.socket.remoteAddress ||
+  //   null;
+
+  //   const userAgent = req.headers['user-agent'] || null;
+  //   const deviceName = this.extractDeviceName(userAgent);
+
+  //   const session = await this.prisma.session.create({
+  //   data: {
+  //     userId: user.id,
+  //     refreshToken: refreshTokenHash,
+  //     ipAddress,
+  //     userAgent,
+  //     deviceName,
+  //     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 zile
+  //   },
+  // });
+
+  // //set cookie in backend 
+  // res.cookies.set({
+  //   name: "access_token",
+  //   value: accessToken,
+  //   httpOnly: true,
+  //   secure: false,     // true in production with HTTPS
+  //   sameSite: "lax",
+  //   path: "/",
+  //   maxAge: 60 * 60 * 24, // 1 day
+  // });
+
+
+  //   return {
+  //   user: {
+  //     id: user.id,
+  //     email: user.email,
+  //     fullName: user.fullName,
+  //   },
+  //   tokens: {
+  //     accessToken,
+  //     refreshToken: refreshToken, 
+  //   },
+  //   session: {
+  //     id: session.id,
+  //     ipAddress: session.ipAddress,
+  //     userAgent: session.userAgent,
+  //     deviceName: session.deviceName,
+  //     expiresAt: session.expiresAt,
+  //   },
+  // };
+  // }
+
+
+
+async login(req: Request, userId: number, res: Response) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    console.log("login userrrrrrrrrrrrrr",user);
+    if (!user) throw new Error('User not found!');
 
     const { accessToken, refreshToken } = await this.generateTokens(
       user.id,
+      user.email,
+      user.fullName || '',
+      user.role
     );
 
-    const refreshTokenHash = await bcrypt.hash(refreshToken,10);
+    // Hash refresh token & save session
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
-     const ipAddress =
-    req.headers['x-forwarded-for']?.toString() ||
-    req.socket.remoteAddress ||
-    null;
+    const ipAddress =
+      req.headers['x-forwarded-for']?.toString() ||
+      req.socket.remoteAddress ||
+      null;
 
     const userAgent = req.headers['user-agent'] || null;
-    const deviceName = this.extractDeviceName(userAgent);
 
-    const session = await this.prisma.session.create({
-    data: {
-      userId: user.id,
-      refreshToken: refreshTokenHash,
-      ipAddress,
-      userAgent,
-      deviceName,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 zile
-    },
-  });
+    await this.prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshToken: refreshTokenHash,
+        ipAddress,
+        userAgent,
+        deviceName: this.extractDeviceName(userAgent),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      },
+    });
+
+    console.log("acessssssssssss",accessToken)
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: false,         // set true only on HTTPS production
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    });
 
     return {
-    user: {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-    },
-    tokens: {
-      accessToken,
-      refreshToken: refreshToken, 
-    },
-    session: {
-      id: session.id,
-      ipAddress: session.ipAddress,
-      userAgent: session.userAgent,
-      deviceName: session.deviceName,
-      expiresAt: session.expiresAt,
-    },
-  };
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+      },
+    };
   }
 
+  
+
+  
   async validateRefreshToken(refreshToken: string) {
     try {
       const payload = await this.jwtService.verifyAsync(refreshToken, {
@@ -162,9 +235,7 @@ export class LoginService {
   async refreshTokens(token:string) {
       const user = await this.validateRefreshToken(token);
       if (!user) throw new UnauthorizedException();
-
-      const { accessToken, refreshToken } = await this.generateTokens(user.id);
-
+      const { accessToken, refreshToken } = await this.generateTokens(user.id,user.email,user.fullName ?? '',user.role);
       return { accessToken, refreshToken };
   }
 

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { Role } from '@prisma/client';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class GetUserDto {
     @ApiProperty({example:1})
@@ -16,5 +17,13 @@ export class GetUserDto {
 
     @ApiProperty({ example: "2025-11-15T10:05:00.000Z" })
     updatedAt: Date;
+
+}
+
+
+export class UpdateRoleDto {
+    @IsEnum(Role)
+    @IsNotEmpty()
+    role:Role
 
 }

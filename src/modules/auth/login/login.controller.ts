@@ -14,17 +14,13 @@ import { RefreshAuthGuard } from '../common/guards/refresh-auth/refresh-auth.gua
 import { JwtAuthGuard } from '../common/guards/jwt-auth/jwt-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { GoogleAuthGuard } from '../common/guards/google-auth/google-auth.guard';
-import { LoginUserDto } from '../dto/login.dto';
-import { Body } from '@nestjs/common/decorators';
-import {Session ,AllowAnonymous,OptionalAuth} from '@thallesp/nestjs-better-auth';
-import type { UserSession } from '@thallesp/nestjs-better-auth';
+import type { Response } from 'express';
 import { ApiOperation,ApiResponse } from '@nestjs/swagger';
-
 
 @Controller('auth')
 export class LoginController {
   constructor(
-    private LoginService: LoginService,
+    private loginService: LoginService,
   ) {}
 
   @Public()
@@ -32,44 +28,52 @@ export class LoginController {
   @UseGuards(LocalAuthGuard)
 
 
-    @Get('me')
-  async getProfile(@Session() session: UserSession) {
-    return { user: session.user };
-  }
+  
   @Get('public')
   async getPublic() {
     return { message: 'Public route' };
   }
 
-
-  @Get('optional')
-  @OptionalAuth() 
-  async getOptional(@Session() session: UserSession) {
-    return { authenticated: !!session };
-  }
   
+ @Get('test-cookie')
+  testCookie(@Req() req) {
+    console.log("Cookies received:", req.cookies);
+    return req.cookies;
+  }
 
-  @UseGuards(LocalAuthGuard)
+
+  @Get('session')
+  @UseGuards(JwtAuthGuard)
+  getSession(@Req() req) {
+    return req.user;
+  }
+
+ 
+
   @Post('login')
+  @UseGuards(LocalAuthGuard)
     @ApiOperation({summary:"User login"})
     @ApiResponse({status:200,description:"User succes login"})
     @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-    create(@Req() req) {
-      return this.LoginService.login(req,req.user.id);
-    }
+   async login(
+  @Req() req,
+  @Res({ passthrough: true }) res: Response
+) {
+   return this.loginService.login(req, req.user.id, res);
+  }
  
   
 
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
   refreshToken(@Req() req) {
-    return this.LoginService.refreshTokens(req.user.refreshToken);
+    return this.loginService.refreshTokens(req.user.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('signout')
   signOut(@Req() req) {
-    this.LoginService.signOut(req.user.id);
+    this.loginService.signOut(req.user.id);
   }
 
 @Get('google/login')
