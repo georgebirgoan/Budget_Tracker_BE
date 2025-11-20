@@ -34,13 +34,6 @@ export class LoginController {
     return { message: 'Public route' };
   }
 
-  
- @Get('test-cookie')
-  testCookie(@Req() req) {
-    console.log("Cookies received:", req.cookies);
-    return req.cookies;
-  }
-
 
   @Get('session')
   @UseGuards(JwtAuthGuard)
@@ -70,15 +63,21 @@ export class LoginController {
     return this.loginService.refreshTokens(req.user.refreshToken);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('signout')
-  signOut(@Req() req) {
-    this.loginService.signOut(req.user.id);
-  }
 
-@Get('google/login')
-@UseGuards(GoogleAuthGuard)
-async googleLogin() {}
+ @UseGuards(JwtAuthGuard)
+@Post("logout")
+async logOut(
+  @Req() req,
+  @Res({ passthrough: true }) res: Response
+) {
+  await this.loginService.signOut(req.user.id);
+
+  res.clearCookie("access_token");
+  res.clearCookie("refresh_token");
+
+  return { message: "Logged out successfully" };
+}
+
 
  /*doar web*/
 // @UseGuards(GoogleAuthGuard)

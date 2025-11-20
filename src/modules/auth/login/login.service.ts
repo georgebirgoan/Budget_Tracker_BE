@@ -240,10 +240,13 @@ async login(req: Request, userId: number, res: Response) {
   }
 
 
-  /**5. Logout user */
   async signOut(userId: number) {
-    //await this.userService.updateHashedRefreshToken(userId, '');
-  }
+  await this.prisma.session.deleteMany({
+    where: { userId },
+  });
+
+  return true;
+}
 
 
   async validateJwtUser(userId: number) {
