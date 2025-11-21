@@ -5,7 +5,6 @@ import jwtConfig from '../config/jwt.config';
 import { AuthJwtPayload } from 'src/modules/auth/common/types/auth-jwtPayload';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoginService } from '../../login/login.service';
-import { Role } from '@prisma/client';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {

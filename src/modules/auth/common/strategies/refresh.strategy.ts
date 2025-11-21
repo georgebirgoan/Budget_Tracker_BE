@@ -17,23 +17,28 @@ export class RefreshJwtStrategy extends PassportStrategy(
     private refrshJwtConfiguration: ConfigType<typeof refreshJwtConfig>,
     private  loginService: LoginService,
   ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+   super({
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => req?.cookies?.refresh_token,
+      ]),
       secretOrKey: refrshJwtConfiguration.secret,
-      ignoreExpiration: false,
       passReqToCallback: true,
     });
+
   }
 
-  // authorization: Bearer sldfk;lsdkf'lskald'sdkf;sdl
 
-  validate(req: Request, payload: AuthJwtPayload) {
-    const authHeader = req.get('authorization');
-    if (!authHeader) {
-      throw new UnauthorizedException('Refresh token not found in authorization header');
-    }
-    const refreshToken = authHeader.replace(/^Bearer\s+/i, '').trim();
-    const userId = payload.sub;
-    // return this.loginService.validateRefreshToken(userId, refreshToken);
-  }
+// async validate(req: Request, payload: AuthJwtPayload) {
+//   const refreshToken = req.cookies?.refresh_token;
+
+//   if (!refreshToken) {
+//     throw new UnauthorizedException("Missing refresh token");
+//   }
+
+//   const user = await this.loginService.validateRefreshToken(payload.sub);
+
+//   return user; 
+// }
+
+
 }

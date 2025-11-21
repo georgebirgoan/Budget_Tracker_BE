@@ -3,9 +3,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { LoginService } from './login.service';
@@ -16,11 +18,18 @@ import { Public } from '../common/decorators/public.decorator';
 import { GoogleAuthGuard } from '../common/guards/google-auth/google-auth.guard';
 import type { Response } from 'express';
 import { ApiOperation,ApiResponse } from '@nestjs/swagger';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
+import type { ConfigType } from '@nestjs/config';
+import jwtConfig from '../common/config/jwt.config';
 
 @Controller('auth')
 export class LoginController {
   constructor(
     private loginService: LoginService,
+    private prisma:PrismaService,
+    private jwtService:JwtService,
+     @Inject(jwtConfig.KEY) private jwtCfg: ConfigType<typeof jwtConfig>,
   ) {}
 
   @Public()
@@ -36,12 +45,45 @@ export class LoginController {
 
 
   @Get('session')
-  @UseGuards(JwtAuthGuard)
-  getSession(@Req() req) {
-    return req.user;
+    @ApiOperation({summary:"User sesion"})
+    @ApiResponse({status:200,description:"User succes login"})
+    @ApiResponse({ status: 401, description: 'Invalid session.' })
+   async sesiune(
+  @Req() req,
+  @Res({ passthrough: true }) res: Response
+) {
+   return this.loginService.getSessionFromTokens(req, res);
   }
-
  
+
+
+
+//  @UseGuards(RefreshAuthGuard)
+//   @Post("refresh")
+//   async refresh(@Req() req, @Res() res) {
+//     const user = req.user;
+
+//     const tokens = await this.loginService.generateTokens(user.id);
+
+//     // set new cookies
+//     res.cookie("access_token", tokens.accessToken, {
+//       httpOnly: true,
+//       sameSite: "strict",
+//       secure: true,
+//     });
+
+//     res.cookie("refresh_token", tokens.refreshToken, {
+//       httpOnly: true,
+//       sameSite: "strict",
+//       secure: true,
+//     });
+
+//     return res.json({
+//       user,
+//       accessToken: tokens.accessToken,
+//     });
+  // }
+
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
@@ -57,11 +99,6 @@ export class LoginController {
  
   
 
-  @UseGuards(RefreshAuthGuard)
-  @Post('refresh')
-  refreshToken(@Req() req) {
-    return this.loginService.refreshTokens(req.user.refreshToken);
-  }
 
 
  @UseGuards(JwtAuthGuard)

@@ -19,7 +19,7 @@ model User {
    id    Int     @default(autoincrement()) @id
   email String  @unique
   password String 
-  fullName  String?
+  fullName  String
   role Role @default(USER)
   isActive Boolean @default(true)
   createdAt DateTime @default(now())
@@ -32,12 +32,13 @@ model User {
 model Session {
   id Int @id @default(autoincrement())
   userId Int
-  refreshToken String 
+  refreshTokenHash String 
   ipAddress String?
   userAgent String?
   deviceName String?
 
   createdAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   expiresAt DateTime
 
   user User @relation(fields:[userId],references:[id])

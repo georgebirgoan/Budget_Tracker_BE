@@ -1,3 +1,4 @@
+import { Session } from '@thallesp/nestjs-better-auth';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterService } from 'src/modules/auth/register/register.service';
@@ -10,7 +11,7 @@ import { CurrentUser } from 'src/modules/auth/common/types/current-user';
 import { CreateUserDto } from 'src/modules/auth/dto/register.dto.';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Request, Response } from 'express'
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 
 @Injectable()
 export class LoginService {
@@ -49,6 +50,53 @@ export class LoginService {
 }
 
 
+
+
+async refreshTokensFromValue(refreshToken: string) {
+  try {
+    const payload = this.jwtService.verify(refreshToken, {
+      secret: this.refreshCfg.secret,
+    });
+
+    const userId = payload.sub;
+    const session = await this.prisma.session.findFirst({
+      where:{userId:userId}
+    })
+      
+    if(!session){
+      throw new UnauthorizedException("Nu exista sesiune activa pentru user!");
+    }
+
+    const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
+    if (!isValid) {
+        throw new UnauthorizedException("Refresh token does not match stored value");
+      }
+      const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    const tokens = await this.generateTokens(user);
+    
+    await this.prisma.session.update({
+      where: { id: session.id },
+      data: {
+        refreshToken: await bcrypt.hash(tokens.refreshToken, 10),
+        // updatedAt: new Date(),
+      }
+    });
+
+    return tokens;
+
+  } catch (err) {
+    throw new UnauthorizedException("Invalid refresh token");
+  }
+}
+
+
   /** 1. Validate email + password */
   async validateUser(email: string, password: string) {
     console.log("email validare",email);
@@ -66,21 +114,34 @@ export class LoginService {
   }
 
   /** 2. Generate both access & refresh tokens */
-  private async generateTokens(userId: number,email1:string,fullName1:string | '',role1:Role) {
-    const payload: AuthJwtPayload = { sub: userId,email:email1,fullName:fullName1,role:role1};
+public async generateTokens(
+  user: {
+  id: number;
+  email: string;
+  fullName: string | null;
+  role: Role;
+  }) {
+  const payload: AuthJwtPayload = {
+  sub: user.id,
+    email: user.email,
+    fullName: user.fullName ?? "",
+    role: user.role,
+  };
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: this.jwtCfg.secret,
-      expiresIn: this.jwtCfg.expiresIn as any,
-    });
+  const accessToken = await this.jwtService.signAsync(payload, {
+    secret: this.jwtCfg.secret,
+    expiresIn: this.jwtCfg.expiresIn as any,  // MUST be string or number
+  });
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: this.refreshCfg.secret,
-      expiresIn: this.refreshCfg.expiresIn as any,
-    });
+  const refreshToken = await this.jwtService.signAsync(payload, {
+    secret: this.refreshCfg.secret,
+    expiresIn: this.refreshCfg.expiresIn as any,
+  });
 
-    return { accessToken, refreshToken };
-  }
+  return { accessToken, refreshToken, payload };
+}
+
+
 
   /**  3. Login user */
   // async login(req:Request,userId: number) {
@@ -150,62 +211,121 @@ export class LoginService {
   // };
   // }
 
-
-
 async login(req: Request, userId: number, res: Response) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    console.log("login userrrrrrrrrrrrrr",user);
-    if (!user) throw new Error('User not found!');
+  const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
-    const { accessToken, refreshToken } = await this.generateTokens(
-      user.id,
-      user.email,
-      user.fullName || '',
-      user.role
-    );
+  if (!user) throw new Error('User not found!');
 
-    // Hash refresh token & save session
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+  // Generate tokens
+  const { accessToken, refreshToken,payload } = await this.generateTokens({
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName ?? "",
+    role: user.role
+  });
 
-    const ipAddress =
-      req.headers['x-forwarded-for']?.toString() ||
-      req.socket.remoteAddress ||
-      null;
+  // Hash refresh token
+  const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
-    const userAgent = req.headers['user-agent'] || null;
+  const ipAddress =
+    req.headers['x-forwarded-for']?.toString() ||
+    req.socket.remoteAddress ||
+    null;
 
-    await this.prisma.session.create({
-      data: {
-        userId: user.id,
-        refreshToken: refreshTokenHash,
-        ipAddress,
-        userAgent,
-        deviceName: this.extractDeviceName(userAgent),
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-      },
+  const userAgent = req.headers['user-agent'] || null;
+
+  // Create session
+  await this.prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken: refreshTokenHash, 
+      ipAddress,
+      userAgent,
+      deviceName: this.extractDeviceName(userAgent),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  // Set access token cookie
+  res.cookie('access_token', accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  // Set refresh token cookie
+  res.cookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+
+  return {
+    message: 'Login successful',
+    user: {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+    },
+  };
+}
+
+
+
+
+  async getSessionFromTokens(req: Request, res: Response) {
+  const accessToken = req.cookies?.access_token;
+
+  try {
+    // 1. Validate access token (signature + expiration)
+    const payload = this.jwtService.verify(accessToken, {
+      secret: this.jwtCfg.secret,
     });
 
-    console.log("acessssssssssss",accessToken)
-    res.cookie('access_token', accessToken, {
+    // 2. Load the user
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    return res.json({ user });
+
+  } catch (err) {
+    // 3. If access token invalid or expired → try refresh
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException("No refresh token → go to login");
+    }
+
+    // 4. Refresh flow (generates new access + refresh tokens)
+    const tokens = await this.refreshTokensFromValue(refreshToken);
+
+    // 5. Rotating new cookies
+    res.cookie("access_token", tokens.accessToken, {
       httpOnly: true,
-      secure: false,         // set true only on HTTPS production
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      sameSite: "strict",
     });
 
-    return {
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-      },
-    };
-  }
+    res.cookie("refresh_token", tokens.refreshToken, {
+      httpOnly: true,
+      sameSite: "strict",
+    });
 
-  
+    return res.json({
+      user: tokens.payload,  // tokens.user is correct
+    });
+  }
+}
+
 
   
   async validateRefreshToken(refreshToken: string) {
@@ -232,12 +352,6 @@ async login(req: Request, userId: number, res: Response) {
     }
   }
 
-  async refreshTokens(token:string) {
-      const user = await this.validateRefreshToken(token);
-      if (!user) throw new UnauthorizedException();
-      const { accessToken, refreshToken } = await this.generateTokens(user.id,user.email,user.fullName ?? '',user.role);
-      return { accessToken, refreshToken };
-  }
 
 
   async signOut(userId: number) {

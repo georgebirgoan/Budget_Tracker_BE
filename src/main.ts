@@ -25,8 +25,8 @@ async function bootstrap() {
   app.enableCors({
 
     //ATENTIE !!!!!!!!!!!!!!!!! SA NU SE UITE SA SE SCHIMBE ORIGINEA CAND SE LUCREAZA PROD/LOCAL
-    origin: 'https://dasmar-fe-ctct.vercel.app/',//IN PRODUCTIE
-    // origin: 'http://localhost:3000',//LOCAL
+    // origin: 'https://dasmar-fe-ctct.vercel.app/',//IN PRODUCTIE
+    origin: 'http://localhost:3000',//LOCAL
     methods: 'GET,POST,PATCH,DELETE,OPTIONS',
     credentials:true,
     allowedHeaders: "Content-Type, Authorization",
