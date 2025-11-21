@@ -280,7 +280,9 @@ async login(req: Request, userId: number, res: Response) {
 
   async getSessionFromTokens(req: Request, res: Response) {
   const accessToken = req.cookies?.access_token;
+  console.log("acces token din front:",accessToken);
 
+  
   try {
     // 1. Validate access token (signature + expiration)
     const payload = this.jwtService.verify(accessToken, {
