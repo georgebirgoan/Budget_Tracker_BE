@@ -67,7 +67,7 @@ async refreshTokensFromValue(refreshToken: string) {
       throw new UnauthorizedException("Nu exista sesiune activa pentru user!");
     }
 
-    const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
+    const isValid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
     if (!isValid) {
         throw new UnauthorizedException("Refresh token does not match stored value");
       }
@@ -84,8 +84,8 @@ async refreshTokensFromValue(refreshToken: string) {
     await this.prisma.session.update({
       where: { id: session.id },
       data: {
-        refreshToken: await bcrypt.hash(tokens.refreshToken, 10),
-        // updatedAt: new Date(),
+        refreshTokenHash: await bcrypt.hash(tokens.refreshToken, 10),
+        updatedAt: new Date(),
       }
     });
 
@@ -238,7 +238,7 @@ async login(req: Request, userId: number, res: Response) {
   await this.prisma.session.create({
     data: {
       userId: user.id,
-      refreshToken: refreshTokenHash, 
+      refreshTokenHash: refreshTokenHash, 
       ipAddress,
       userAgent,
       deviceName: this.extractDeviceName(userAgent),

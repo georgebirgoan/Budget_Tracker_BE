@@ -8,6 +8,7 @@ async function main() {
     where: { email: 'admin@budgettracker.com' },
     update: {},
     create: {
+      fullName:"Test",
       email: 'admin@budgettracker.com',
       password: 'hashedpassword',
     },
