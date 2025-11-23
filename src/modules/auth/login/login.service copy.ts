@@ -137,7 +137,7 @@ public async generateTokens(
     secret: this.refreshCfg.secret,
     expiresIn: this.refreshCfg.expiresIn as any,
   });
-  console.log("user din generate:",user);
+
   return { accessToken, refreshToken, user };
 }
 
@@ -280,6 +280,7 @@ async login(req: Request, userId: number, res: Response) {
 
   async getSessionFromTokens(req: Request, res: Response) {
   const accessToken = req.cookies?.access_token;
+  console.log("acces token din front:",accessToken);
 
 
   try {
@@ -296,13 +297,15 @@ async login(req: Request, userId: number, res: Response) {
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
-    console.log("user cand are acces token:",user);
-  return {
+
+  return res.json({
+      user: {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
         role: user.role
-    };
+      }
+    });
 
   } catch (err) {
     // 3. If access token invalid or expired → try refresh
@@ -314,10 +317,7 @@ async login(req: Request, userId: number, res: Response) {
 
     // 4. Refresh flow (generates new access + refresh tokens)
     const tokens = await this.refreshTokensFromValue(refreshToken);
-    
-    if(tokens.user == undefined){
-      throw new Error("Eroare tokennnnnnnnnn");
-    }
+
     // 5. Rotating new cookies
     res.cookie("access_token", tokens.accessToken, {
       httpOnly: true,
@@ -328,15 +328,15 @@ async login(req: Request, userId: number, res: Response) {
       httpOnly: true,
       sameSite: "strict",
     });
-   
-     return {
+
+     return res.json({
       user: {
         id: tokens.user.id,
         email: tokens.user.email,
         fullName: tokens.user.fullName,
         role: tokens.user.role
       }
-    };
+    });
   }
 }
 
