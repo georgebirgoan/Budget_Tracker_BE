@@ -249,8 +249,8 @@ async login(req: Request, userId: number, res: Response) {
   // Set access token cookie
   res.cookie('access_token', accessToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/',
     maxAge: 24 * 60 * 60 * 1000,
   });
