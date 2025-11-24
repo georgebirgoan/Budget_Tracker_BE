@@ -258,8 +258,8 @@ async login(req: Request, userId: number, res: Response) {
   // Set refresh token cookie
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
