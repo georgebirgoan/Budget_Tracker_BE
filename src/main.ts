@@ -22,15 +22,16 @@ async function bootstrap() {
 
   
   
-  app.enableCors({
+      app.enableCors({
+        origin: [
+          "http://localhost:3000",                // LOCAL
+          "https://dasmar-fe-ctct.vercel.app"     // PROD
+        ],
+        methods: "GET,POST,PATCH,DELETE,OPTIONS",
+        credentials: true,
+        allowedHeaders: "Content-Type, Authorization",
+      });
 
-    //ATENTIE !!!!!!!!!!!!!!!!! SA NU SE UITE SA SE SCHIMBE ORIGINEA CAND SE LUCREAZA PROD/LOCAL
-    origin: 'https://dasmar-fe-ctct.vercel.app/',//IN PRODUCTIE
-    // origin: 'http://localhost:3000',//LOCAL
-    methods: 'GET,POST,PATCH,DELETE,OPTIONS',
-    credentials:true,
-    allowedHeaders: "Content-Type, Authorization",
-  });
 
    const config = new DocumentBuilder()
     .setTitle('Budget Tracker API')                
