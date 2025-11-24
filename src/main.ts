@@ -33,10 +33,10 @@ async function bootstrap() {
   });
 
    const config = new DocumentBuilder()
-    .setTitle('Budget Tracker API')                 // Your project title
-    .setDescription('API documentation for Budget Tracker system') // Description
+    .setTitle('Budget Tracker API')                
+    .setDescription('API documentation for Budget Tracker system')
     .setVersion('1.0')
-    .addBearerAuth()                                // ✅ Adds "Authorize" button for JWT
+    .addBearerAuth()                            
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
