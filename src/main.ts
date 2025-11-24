@@ -20,26 +20,10 @@ async function bootstrap() {
     transform: true,
   }));
 
-//   const allowed = [
-//   "http://localhost:3000",
-//   "https://dasmar-fe-ctct.vercel.app",
-// ];
-
-// app.enableCors({
-//   origin: (origin, cb) => {
-//     if (!origin || allowed.includes(origin)) return cb(null, true);
-//     return cb(new Error("Not allowed by CORS"), false);
-//   },
-//   credentials: true,
-// });
-
    
       app.enableCors({
         origin: [
-          "http://localhost:3000",                // LOCAL
-          "https://dasmar-fe-ctct.vercel.app",    // PROD FRONT STEFAN
-          " https://dasmar-fe.onrender.com"     // PROD FRONT eu
-
+          "https://dasmar-fe.onrender.com"     // PROD FRONT eu
         ],
         methods: "GET,POST,PATCH,DELETE,OPTIONS",
         credentials: true,

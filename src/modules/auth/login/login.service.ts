@@ -246,6 +246,10 @@ async login(req: Request, userId: number, res: Response) {
     },
   });
 
+  console.log('acces token',accessToken);
+  console.log('refresh token',refreshToken);
+
+
   // Set access token cookie
   res.cookie('access_token', accessToken, {
     httpOnly: true,
