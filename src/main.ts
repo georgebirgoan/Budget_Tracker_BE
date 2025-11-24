@@ -11,26 +11,36 @@ async function bootstrap() {
   });
   console.log('🚀 NestJS backend starting...');
 
-
   app.use(cookieParser());
 
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // remove unknown properties
-    // forbidNonWhitelisted: true, // throw error on extra fields
-    transform: true, // automatically transform payloads to DTO classes
+    whitelist: true, 
+    transform: true,
   }));
 
-  
+  const allowed = [
+  "http://localhost:3000",
+  "https://dasmar-fe-ctct.vercel.app",
+];
+
+app.enableCors({
+  origin: (origin, cb) => {
+    if (!origin || allowed.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS"), false);
+  },
+  credentials: true,
+});
+
    
-      app.enableCors({
-        origin: [
-          "http://localhost:3000",                // LOCAL
-          "https://dasmar-fe-ctct.vercel.app"     // PROD
-        ],
-        methods: "GET,POST,PATCH,DELETE,OPTIONS",
-        credentials: true,
-        allowedHeaders: "Content-Type, Authorization",
-      });
+      // app.enableCors({
+      //   origin: [
+      //     "http://localhost:3000",                // LOCAL
+      //     "https://dasmar-fe-ctct.vercel.app"     // PROD
+      //   ],
+      //   methods: "GET,POST,PATCH,DELETE,OPTIONS",
+      //   credentials: true,
+      //   allowedHeaders: "Content-Type, Authorization",
+      // });
 
 
    const config = new DocumentBuilder()
