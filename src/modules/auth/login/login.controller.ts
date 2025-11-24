@@ -94,7 +94,8 @@ export class LoginController {
   @Req() req,
   @Res({ passthrough: true }) res: Response
 ) {
-   return this.loginService.login(req, req.user.id, res);
+  const result = await this.loginService.login(req,req.user.id,res);
+  return result;
   }
  
   
