@@ -21,14 +21,31 @@ async function bootstrap() {
   }));
 
    
+      // app.enableCors({
+      //   origin: [
+      //     "https://dasmar-fe.onrender.com"     // PROD FRONT eu
+      //   ],
+      //   methods: "GET,POST,PATCH,DELETE,OPTIONS",
+      //   credentials: true,
+      //   allowedHeaders: "Content-Type, Authorization",
+      // });
+
       app.enableCors({
-        origin: [
-          "https://dasmar-fe.onrender.com"     // PROD FRONT eu
-        ],
-        methods: "GET,POST,PATCH,DELETE,OPTIONS",
-        credentials: true,
-        allowedHeaders: "Content-Type, Authorization",
-      });
+  origin: (origin, cb) => {
+    const allowed = [
+      "http://localhost:3000",
+      "https://dasmar-fe.onrender.com", 
+    ];
+
+    // Permite TOATE subdomeniile *.onrender.com ale frontendului
+    if (!origin || allowed.includes(origin) || /https:\/\/dasmar-fe.*\.onrender\.com$/.test(origin)) {
+      cb(null, true);
+    } else {
+      cb(new Error("CORS blocked: " + origin));
+    }
+  },
+  credentials: true,
+});
 
 
    const config = new DocumentBuilder()
