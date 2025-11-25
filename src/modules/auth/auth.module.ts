@@ -11,6 +11,8 @@ import { LoginController } from './login/login.controller';
 import { RegisterController } from './register/register.controller';
 import { LoginService } from './login/login.service';
 import { RegisterService } from './register/register.service';
+import { UserAuthService } from './utils/user-service';
+import { UserSessionService } from './utils/session-service';
 
 
 @Module({
@@ -33,7 +35,9 @@ import { RegisterService } from './register/register.service';
     RegisterService,
     JwtStrategy,
     RefreshJwtStrategy,
-    LocalStrategy
+    LocalStrategy,
+    UserAuthService,
+    UserSessionService
   ],
   exports: [JwtModule],
 })

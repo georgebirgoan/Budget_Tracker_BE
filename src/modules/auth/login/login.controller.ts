@@ -8,6 +8,8 @@ import {
   Req,
   Res,
   UseGuards,
+  Param,
+  ParseIntPipe
 } from '@nestjs/common';
 import { LoginService } from './login.service';
 import { LocalAuthGuard } from '../common/guards/local-auth/local-auth.guard';
@@ -21,11 +23,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import type { ConfigType } from '@nestjs/config';
 import jwtConfig from '../common/config/jwt.config';
+import { UserSessionService } from '../utils/session-service';
 
 @Controller('auth')
 export class LoginController {
   constructor(
     private loginService: LoginService,
+    private userSessionService:UserSessionService,
     private prisma:PrismaService,
     private jwtService:JwtService,
      @Inject(jwtConfig.KEY) private jwtCfg: ConfigType<typeof jwtConfig>,
@@ -42,48 +46,6 @@ export class LoginController {
     return { message: 'Public route' };
   }
 
-
-  @Get('session')
-    @ApiOperation({summary:"User sesion"})
-    @ApiResponse({status:200,description:"User succes login"})
-    @ApiResponse({ status: 401, description: 'Invalid session.' })
-   async sesiune(
-  @Req() req,
-  @Res({ passthrough: true }) res: Response
-) {
-   return this.loginService.getSessionFromTokens(req, res);
-  }
- 
-
-
-
-//  @UseGuards(RefreshAuthGuard)
-//   @Post("refresh")
-//   async refresh(@Req() req, @Res() res) {
-//     const user = req.user;
-
-//     const tokens = await this.loginService.generateTokens(user.id);
-
-//     // set new cookies
-//     res.cookie("access_token", tokens.accessToken, {
-//       httpOnly: true,
-//       sameSite: "strict",
-//       secure: true,
-//     });
-
-//     res.cookie("refresh_token", tokens.refreshToken, {
-//       httpOnly: true,
-//       sameSite: "strict",
-//       secure: true,
-//     });
-
-//     return res.json({
-//       user,
-//       accessToken: tokens.accessToken,
-//     });
-  // }
-
-
   @Post('login')
   @UseGuards(LocalAuthGuard)
     @ApiOperation({summary:"User login"})
@@ -97,52 +59,55 @@ export class LoginController {
   return result;
   }
  
+
+  @Get('session')
+    @ApiOperation({summary:"User sesion"})
+    @ApiResponse({status:200,description:"User succes login"})
+    @ApiResponse({ status: 401, description: 'Invalid session.' })
+   async sesiune(
+  @Req() req,
+  @Res({ passthrough: true }) res: Response
+) {
+   return this.loginService.getSessionFromTokens(req, res);
+  }
+
+
+  //toate sesiunile active
+  @UseGuards(JwtAuthGuard)
+  @Get("sessions")
+  async listSessions(@Req() req) {
+    return this.userSessionService.getSessionsByUser(req.user.id);
+  }
+
+@Post("logout/:sessionId")
+async logout(@Param("sessionId", ParseIntPipe) sessionId: number) {
+  console.log("sessionId =", sessionId); // now a real number
+  return this.userSessionService.revokeSession(sessionId);
+}
+
+
+
   
 
 
 
- @UseGuards(JwtAuthGuard)
-@Post("logout")
-async logOut(
-  @Req() req,
-  @Res({ passthrough: true }) res: Response
-) {
-  await this.loginService.signOut(req.user.id);
-
-  res.clearCookie("access_token");
-  res.clearCookie("refresh_token");
-
-  return { message: "Logged out successfully" };
-}
 
 
- /*doar web*/
-// @UseGuards(GoogleAuthGuard)
-// @Get('google/callback')
-// async googleCallback(@Req() req,@Res() res) {
-//   console.log('✅ Entered AuthController.googleCallback()',req.user);
-//   const response = await this.LoginService.login(req.user.id);
 
-//   return res.redirect(`http://localhost:8081/auth/callback?token=${response.accessToken}`);
+//  @UseGuards(JwtAuthGuard)
+// @Post("logout")
+// async logOut(
+//   @Req() req,
+//   @Res({ passthrough: true }) res: Response
+// ) {
+//   await this.loginService.signOut(req.user.id);
+
+//   res.clearCookie("access_token");
+//   res.clearCookie("refresh_token");
+
+//   return { message: "Logged out successfully" };
 // }
 
-// @UseGuards(GoogleAuthGuard)
-// @Get('google/callback')
-// async googleCallback(@Req() req, @Res() res,loginDto:LoginUserDto) {
-//   try {
-//     // ⚙️ Hardcoded mobile deep link (your LAN IP)
-//     const redirectUri = 'exp://172.20.10.9:8081/--/auth/callback';
-
-//     const tokens = await this.authService.login(req.user.id,loginDto);
-
-//     console.log('✅ Google OAuth successful for user:', req.user.email);
-//     console.log('↩️ Redirecting to mobile deep link:', redirectUri);
-
-//     return res.redirect(`${redirectUri}?token=${tokens.accessToken}`);
-//   } catch (error) {
-//     console.error('❌ Google callback error:', error);
-//     return res.status(500).json({ message: 'OAuth callback failed', error });
-//   }
 
 
 

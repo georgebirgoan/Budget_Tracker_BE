@@ -30,19 +30,20 @@ model User {
 }
 
 model Session {
-  id Int @id @default(autoincrement())
-  userId Int
-  refreshTokenHash String 
-  ipAddress String?
-  userAgent String?
-  deviceName String?
+  id            Int       @id @default(autoincrement())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        Int
 
-  createdAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  expiresAt DateTime
+  refreshToken  String    @unique       
+  userAgent     String?
+  ip            String?
+  deviceName    String? 
 
-  user User @relation(fields:[userId],references:[id])
-} 
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  expiresAt     DateTime
+  revoked       Boolean   @default(false)
+}
 
 
 enum Role {
