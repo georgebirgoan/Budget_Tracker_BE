@@ -62,7 +62,9 @@ export class UserAuthService{
                 maxAge: 30 * 24 * 60 * 60 * 1000, //7d
             });
         }
+       
         async saveSessionId(res:Response,id:number){
+                console.log("modeSameSite save session:",modeSameSite);
                 res.cookie('session_id', id, {
                     httpOnly: true,
                     secure: modeSameSite == "PROD" ? true : false,
