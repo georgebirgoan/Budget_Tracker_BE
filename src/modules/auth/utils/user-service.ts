@@ -64,7 +64,7 @@ export class UserAuthService{
         }
         async saveSessionId(res:Response,id:number){
                 res.cookie('session_id', id, {
-                    httpOnly: false,
+                    httpOnly: true,
                     secure: modeSameSite == "PROD" ? true : false,
                     sameSite: modeSameSite == "PROD" ? "none" :"lax",
                     path: '/',
