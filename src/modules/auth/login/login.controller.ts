@@ -9,7 +9,8 @@ import {
   Res,
   UseGuards,
   Param,
-  ParseIntPipe
+  ParseIntPipe,
+  NotFoundException
 } from '@nestjs/common';
 import { LoginService } from './login.service';
 import { LocalAuthGuard } from '../common/guards/local-auth/local-auth.guard';
@@ -72,17 +73,27 @@ export class LoginController {
   }
 
 
-  //toate sesiunile active
   @UseGuards(JwtAuthGuard)
   @Get("sessions")
   async listSessions(@Req() req) {
     return this.userSessionService.getSessionsByUser(req.user.id);
   }
 
-@Post("logout/:sessionId")
-async logout(@Param("sessionId", ParseIntPipe) sessionId: number) {
-  console.log("sessionId =", sessionId); // now a real number
-  return this.userSessionService.revokeSession(sessionId);
+@Post("logout/:id")
+async logout(
+  @Param("id") sessionId: number,
+  @Res({ passthrough: true }) res: Response
+) {
+  const deleted = await this.userSessionService.revokeSession(sessionId);
+
+  res.clearCookie("access_token");
+  res.clearCookie("refresh_token");
+  res.clearCookie("session_id");
+
+  if (!deleted) {
+    throw new NotFoundException("Session not found or already revoked");
+  }
+  return { message: "Logout successful" };
 }
 
 

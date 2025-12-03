@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import jwtConfig from '../common/config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
@@ -7,6 +7,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Request, Response } from 'express'
 import { UserAuthService } from '../utils/user-service';
 import { UserSessionService } from '../utils/session-service';
+import { SessionService } from 'src/session/session.service';
 @Injectable()
 export class LoginService {
 
@@ -14,7 +15,7 @@ export class LoginService {
   constructor(
     private prisma:PrismaService,
     private userAuthService:UserAuthService,
-    private userSessionService:UserSessionService,
+    private sessionService:SessionService,
     private readonly jwtService: JwtService,
 
     @Inject(jwtConfig.KEY)
@@ -26,7 +27,10 @@ export class LoginService {
 
   async login(req: Request, userId: number, res: Response) {
     const user = await this.userAuthService.findUser(userId);
-
+    
+    if(!user){
+      throw new UnauthorizedException("Invalid credential,user not found!");
+    }
     
     const { accessToken, refreshToken } = await this.userAuthService.generateTokens({
       id: user.id,
@@ -34,6 +38,9 @@ export class LoginService {
       fullName: user.fullName ?? "",
       role: user.role
     });
+
+  
+
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
     const ip =
@@ -45,18 +52,30 @@ export class LoginService {
     const parsed = this.userAuthService.parseDevice(userAgent);
     const deviceName = `${parsed.deviceModel} · ${parsed.os} · ${parsed.browser}`;
 
-    const session =await this.userSessionService.createDeviceSession({
-      userId:user.id,
-      refreshToken:refreshTokenHash,
-      ip,
-      userAgent,
-      deviceName
-    });
+    // const session =await this.userSessionService.createDeviceSession({
+    //   userId:user.id,
+    //   refreshToken:refreshTokenHash,
+    //   ip,
+    //   userAgent,
+    //   deviceName
+    // });
+let sessionId = 0;
 
+      try {
+        sessionId = await this.sessionService.createSession({
+          userId: user.id,
+          ip,
+          userAgent,
+          deviceName,
+          refreshTokenHash,
+        });
+      } catch (err) {
+        throw new InternalServerErrorException("Failed to create user session");
+      }
 
     await this.userAuthService.saveAccesToken(res,accessToken);
     await this.userAuthService.saveRefreshToken(res,refreshToken);
-    await this.userAuthService.saveSessionId(res,session.id);
+    await this.userAuthService.saveSessionId(res,sessionId);
     
     return {
       message: 'Login successful',
@@ -96,13 +115,10 @@ export class LoginService {
         },
       };
     } catch (err) {
-      // Access token is expired or invalid → go to refresh logic
+     
     }
   }
 
-  //
-  // 2. If access token missing OR invalid → try refresh token (BIG APP BEHAVIOUR)
-  //
   if (!refreshToken) {
     throw new UnauthorizedException("No refresh token → go to login");
   }

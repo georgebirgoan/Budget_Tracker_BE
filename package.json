@@ -7,12 +7,12 @@
   "license": "UNLICENSED",
   "scripts": {
     "deploy:migrate": "prisma migrate deploy",
-    "start": "node dist/main.js",
-    "build": "node node_modules/@nestjs/cli/bin/nest.js build",
-    "start:dev": "node node_modules/@nestjs/cli/bin/nest.js start --watch",
-    "start:debug": "node node_modules/@nestjs/cli/bin/nest.js start --debug --watch",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "build": "nest build",
+    "start:prod": "node dist/main.js",
+    "start:debug": "nest start --debug --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -20,13 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
-  "testLocal": {
-    "start": "nest start",
-    "start:dev": "nest start --watch"
-  },
   "dependencies": {
     "@faker-js/faker": "^10.1.0",
-    "@nestjs/cli": "^11.0.10",
     "@nestjs/common": "^11.1.8",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -49,6 +44,7 @@
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
     "prisma": "^7.0.1",
+    "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.28",
@@ -58,6 +54,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.14",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",

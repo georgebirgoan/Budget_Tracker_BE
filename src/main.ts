@@ -34,6 +34,7 @@ async function bootstrap() {
   origin: (origin, cb) => {
     const allowed = [
       "http://localhost:3000",
+      "http://localhost:3001",
       "https://dasmar-fe.onrender.com", 
     ];
 

@@ -8,6 +8,8 @@ import { ConfigModule } from '@nestjs/config';
 import jwtConfig from './modules/auth/common/config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { RedisModule } from './redis/redis.module';
+import { SessionService } from './session/session.service';
 
 @Module({
   imports: [
@@ -20,8 +22,9 @@ import { UsersModule } from './modules/users/users.module';
     PropertyModule,
     AuthModule,
     UsersModule,
+    RedisModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,SessionService],
 })
 export class AppModule {}

@@ -1,12 +1,25 @@
 version: '2.4'
 
+
+
+
 services:
+  redis:
+    image: redis:7
+    container_name: redis-server
+    ports:
+    - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
   db:
     image: postgres:16
     container_name: postgres-container-dasmar
     environment:
       POSTGRES_USER: george
-      POSTGRES_PASSWORD: lVn1wcWcdz5cO97u4eUn8r263mLqrfCB
+      POSTGRES_PASSWORD: postgresql://george:lVn1wcWcdz5cO97u4eUn8r263mLqrfCB@dpg-d4bgk5npm1nc73bq2mt0-a/dasmar_db
       POSTGRES_DB: dasmar_db
     ports:
       - "5432:5432"
@@ -25,10 +38,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: dasmar-front
+    container_name: dasmar-back
     ports:
       - "8000:8000"
     environment:
+      REDIS_URL: redis://redis:6379
       DATABASE_URL: postgresql://george:lVn1wcWcdz5cO97u4eUn8r263mLqrfCB@dpg-d4bgk5npm1nc73bq2mt0-a.oregon-postgres.render.com/dasmar_db
       COOKIE_KEY: Uph5zvQqZGhNCZE6gVB2n28qJk9s3w6BHlf1GXasXMLP7wRdcP
     depends_on:
@@ -44,3 +58,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis-data:

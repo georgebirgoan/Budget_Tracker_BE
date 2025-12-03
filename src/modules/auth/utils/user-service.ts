@@ -181,33 +181,46 @@ export class UserAuthService{
 }
 
 
-    async generateTokens(
-        user: {
-        id: number;
-        email: string;
-        fullName: string | null;
-        role: Role;
-        }) {
-        const payload: AuthJwtPayload = {
-        sub: user.id,
-            email: user.email,
-            fullName: user.fullName ?? "",
-            role: user.role,
-        };
-        
-        const accessToken = await this.jwtService.signAsync(payload, {
-            secret: this.jwtCfg.secret,
-            expiresIn: this.jwtCfg.expiresIn as any,
-        });
-        
-        const refreshToken = await this.jwtService.signAsync(payload, {
-            secret: this.refreshCfg.secret,
-            expiresIn: this.refreshCfg.expiresIn as any,
-        });
-        console.log("user din generate:",user);
-        return { accessToken, refreshToken, user };
-        }
+async generateTokens(
+    user: {
+    id: number;
+    email: string;
+    fullName: string | null;
+    role: Role;
+    }) {
+    const payload: AuthJwtPayload = {
+    sub: user.id,
+        email: user.email,
+        fullName: user.fullName ?? "",
+        role: user.role,
+    };
     
+    const accessToken = await this.jwtService.signAsync(payload, {
+        secret: this.jwtCfg.secret,
+        expiresIn: this.jwtCfg.expiresIn as any,
+    });
+    
+    if(!accessToken){
+        throw new NotFoundException("Nu sa realizat acces token!");
+    }
+
+    const refreshToken = await this.jwtService.signAsync(payload, {
+        secret: this.refreshCfg.secret,
+        expiresIn: this.refreshCfg.expiresIn as any,
+    });
+    
+    
+    if(!refreshToken){
+        throw new NotFoundException("Nu sa realizat refresh token!");
+    }
+
+
+    return { accessToken, refreshToken, user };
+    }
+    
+
+
+
     async validateUser(email: string, password: string) {
         const user = await this.prisma.user.findUnique({
         where:{email}
@@ -220,6 +233,9 @@ export class UserAuthService{
 
         return user;
 }
+
+
+
 
     // async validateRefreshToken(refreshToken: string) {
     //     try {

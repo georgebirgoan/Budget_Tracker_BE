@@ -5,13 +5,14 @@ import jwtConfig from '../common/config/jwt.config';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { REDIS, RedisModule } from "src/redis/redis.module";
 
 @Injectable()
 export class UserSessionService{
     constructor(
         private prisma:PrismaService,
         private readonly jwtService: JwtService,
-        
+        @Inject(REDIS) private readonly redis,
         @Inject(jwtConfig.KEY)
         private readonly jwtCfg: ConfigType<typeof jwtConfig>,
 
@@ -106,14 +107,21 @@ export class UserSessionService{
     },
     });
         }
-    
-    
-    async revokeSession(sessionId: number) {
-        return this.prisma.session.update({
-        where: { id: sessionId },
-        data: { revoked: true },
-        });
-    }
+   async revokeSession(sessionId: number) {
+  const key = `session:${sessionId}`;
+
+
+  const exists = await this.redis.exists(key);
+  if (!exists) {
+    return false;
+  }
+
+ 
+  await this.redis.del(key);
+
+  return true;
+}
+
    
 
 }
