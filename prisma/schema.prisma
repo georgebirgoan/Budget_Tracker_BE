@@ -45,3 +45,8 @@ enum Role {
   USER
   ADMIN
 }
+
+model Test {
+  testId Int    @id @default(autoincrement())
+  name   String
+}
