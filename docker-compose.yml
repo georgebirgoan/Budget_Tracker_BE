@@ -1,0 +1,46 @@
+version: '2.4'
+
+services:
+  db:
+    image: postgres:16
+    container_name: postgres-container-dasmar
+    environment:
+      POSTGRES_USER: george
+      POSTGRES_PASSWORD: lVn1wcWcdz5cO97u4eUn8r263mLqrfCB
+      POSTGRES_DB: dasmar_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U george -d dasmar_db -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dasmar-front
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://george:lVn1wcWcdz5cO97u4eUn8r263mLqrfCB@dpg-d4bgk5npm1nc73bq2mt0-a.oregon-postgres.render.com/dasmar_db
+      COOKIE_KEY: Uph5zvQqZGhNCZE6gVB2n28qJk9s3w6BHlf1GXasXMLP7wRdcP
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

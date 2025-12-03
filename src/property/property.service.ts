@@ -3,11 +3,9 @@ import { CreatePropertyDto } from './dto/createProperty.dto';
 import { UpdatePropertyDto } from './dto/updateProperty.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
-import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class PropertyService {
   constructor(
-    private prismaService:PrismaService,
   ) {}
   // async findOne(id: number) {
   //   const property = await this.prismaService.findOne({
