@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
+import { Role } from '@prisma/client';
 
 
 
@@ -37,7 +38,7 @@ export class RegisterService {
           email: createUserDto.email,
           password: hashPass,
           fullName: createUserDto.fullName ?? 'defaultName',
-          role:'USER',
+          role:Role.USER,
           isActive:false
         },
       });
@@ -52,7 +53,7 @@ export class RegisterService {
   };
 
     } catch (error) {
-      console.error('❌ User creation failed:', error);
+      console.error(' User creation failed:', error);
       throw error;
     }
   }
