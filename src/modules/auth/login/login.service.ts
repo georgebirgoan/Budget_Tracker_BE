@@ -89,6 +89,7 @@ async getAllSessions() {
 
   for (const key of keys) {
     const data = await this.redis.get(key);
+      console.log("data sessions",data);
     if (data) {
       sessions.push(JSON.parse(data));
     }
@@ -103,8 +104,8 @@ async getSession(sessionId: string): Promise<SessionData> {
   if (!sessionId) {
     throw new UnauthorizedException("Missing session ID");
   }
-
   const data = await this.redis.get(`session:${sessionId}`);
+  console.log("data session",data);
 
   if (!data) {
     throw new NotFoundException("Session not found");

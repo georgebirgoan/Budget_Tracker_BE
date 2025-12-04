@@ -3,6 +3,8 @@ import { createClient } from 'redis';
 import { mode } from 'src/utils/constants';
 export const REDIS = 'REDIS_CONNECTION';
 
+
+
 @Global()
 @Module({
   providers: [
