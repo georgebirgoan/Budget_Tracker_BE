@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { REDIS } from '../redis/redis.module';
+import { SessionData } from 'src/modules/auth/types/sessionInterface';
+import { Role } from 'src/modules/auth/common/enums/role.enum';
 
 @Injectable()
 export class SessionService {
@@ -15,7 +17,7 @@ export class SessionService {
 
     const sessionId = await this.redis.incr("session_counter");
 
-    const payload = {
+    const payload :SessionData = {
       sessionId,
       userId: sessionData.userId,
       ip: sessionData.ip,
@@ -23,7 +25,8 @@ export class SessionService {
       deviceName: sessionData.deviceName,
       refreshTokenHash: sessionData.refreshTokenHash,
       createdAt: Date.now(),
-      expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 zile
+      expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      role:Role.ADMIN
     };
 
     await this.redis.set(

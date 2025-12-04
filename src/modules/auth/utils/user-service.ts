@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException,Inject,UnauthorizedException} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service"
 import {Request,Response} from 'express';
-import { modeSameSite } from "src/utils/constants";
+import { mode } from "src/utils/constants";
 import { JwtService } from "@nestjs/jwt";
 import jwtConfig from '../common/config/jwt.config';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
@@ -46,8 +46,8 @@ export class UserAuthService{
     async saveAccesToken(res:Response,access_token:string){
         res.cookie('access_token', access_token, {
             httpOnly: true,
-            secure: modeSameSite == "PROD" ? true : false,
-            sameSite: modeSameSite == "PROD" ? "none" :"lax",
+            secure: mode == "PROD" ? true : false,
+            sameSite: mode == "PROD" ? "none" :"lax",
             path: '/',
             maxAge: 24 * 60 * 60 * 1000,
           });
@@ -56,19 +56,19 @@ export class UserAuthService{
     async saveRefreshToken(res:Response,refreshToken:string){
             res.cookie('refresh_token', refreshToken, {
                 httpOnly: true,
-                secure: modeSameSite == "PROD" ? true : false,
-                sameSite: modeSameSite == "PROD" ? "none" :"lax" ,
+                secure: mode == "PROD" ? true : false,
+                sameSite: mode == "PROD" ? "none" :"lax" ,
                 path: '/',
                 maxAge: 30 * 24 * 60 * 60 * 1000, //7d
             });
         }
        
         async saveSessionId(res:Response,id:number){
-                console.log("modeSameSite save session:",modeSameSite);
+                console.log("mode save session:",mode);
                 res.cookie('session_id', id, {
                     httpOnly: true,
-                    secure: modeSameSite == "PROD" ? true : false,
-                    sameSite: modeSameSite == "PROD" ? "none" :"lax",
+                    secure: mode == "PROD" ? true : false,
+                    sameSite: mode == "PROD" ? "none" :"lax",
                     path: '/',
                 });
             }

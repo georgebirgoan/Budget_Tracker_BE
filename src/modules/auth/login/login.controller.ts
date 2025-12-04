@@ -59,25 +59,33 @@ export class LoginController {
   const result = await this.loginService.login(req,req.user.id,res);
   return result;
   }
- 
 
-  @Get('session')
-    @ApiOperation({summary:"User sesion"})
-    @ApiResponse({status:200,description:"User succes login"})
-    @ApiResponse({ status: 401, description: 'Invalid session.' })
-   async sesiune(
+
+@Get('sessions')
+@ApiOperation({ summary: "User session" })
+@ApiResponse({ status: 200, description: "User session returned" })
+@ApiResponse({ status: 401, description: "Invalid session." })
+@ApiResponse({ status: 404, description: "Unthorized session." })
+async getAllSession(
   @Req() req,
   @Res({ passthrough: true }) res: Response
 ) {
-   return this.loginService.getSessionFromTokens(req, res);
-  }
+  return this.loginService.getAllSessions();
+}
 
 
-  @UseGuards(JwtAuthGuard)
-  @Get("sessions")
-  async listSessions(@Req() req) {
-    return this.userSessionService.getSessionsByUser(req.user.id);
+@Get('session')
+@ApiOperation({ summary: "Get current user session_id" })
+async getCurrentSession(
+  @Req() req,
+) {
+  const sessionId = req.cookies.session_id;
+  console.log("sessionId:",sessionId);
+  if(!sessionId){
+    throw new NotFoundException("Nu s-a gasit sesion id:");
   }
+  return this.loginService.getSession(sessionId);
+}
 
 @Post("logout/:id")
 async logout(

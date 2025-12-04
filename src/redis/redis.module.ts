@@ -1,6 +1,6 @@
 import { Module, Global } from '@nestjs/common';
 import { createClient } from 'redis';
-
+import { mode } from 'src/utils/constants';
 export const REDIS = 'REDIS_CONNECTION';
 
 @Global()
@@ -10,11 +10,11 @@ export const REDIS = 'REDIS_CONNECTION';
       provide: REDIS,
       useFactory: async () => {
         const client = createClient({
-          url: process.env.REDIS_URL || 'redis://redis:6379',
+          url: mode == "PROD" ? process.env.REDIS_URL : process.env.REDIS_URL_LOCAL ,
         });
 
-        client.on('connect', () => console.log('🔌 Redis connected'));
-        client.on('error', (err) => console.error('❌ Redis error', err));
+        client.on('connect', () => console.log(' Redis connected'));
+        client.on('error', (err) => console.error('Redis error', err));
         
       
         await client.connect();

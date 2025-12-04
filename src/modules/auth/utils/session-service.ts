@@ -107,10 +107,12 @@ export class UserSessionService{
     },
     });
         }
+
+
+
+
    async revokeSession(sessionId: number) {
   const key = `session:${sessionId}`;
-
-
   const exists = await this.redis.exists(key);
   if (!exists) {
     return false;
