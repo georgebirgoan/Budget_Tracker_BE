@@ -67,12 +67,11 @@ export class UserAuthService{
                 console.log("mode save session:",mode);
                 res.cookie('session_id', id, {
                     httpOnly: true,
-                    domain:mode == "PROD" ? ".onrender.com" : undefined,
-                    secure: mode == "PROD" ? true : false,
-                    sameSite: mode == "PROD" ? "none" :"lax",
+                    secure: mode === "PROD" ? true : false,
+                    sameSite: mode === "PROD" ? "none" :"lax",
+                    domain:mode === "PROD" ? ".onrender.com" : undefined,
                     path: '/',
                     maxAge: 30 * 24 * 60 * 60 * 1000, 
-
                 });
             }
 
