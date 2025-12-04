@@ -67,9 +67,12 @@ export class UserAuthService{
                 console.log("mode save session:",mode);
                 res.cookie('session_id', id, {
                     httpOnly: true,
+                    domain:mode == "PROD" ? "https://dasmar-fe.onrender.com" : undefined,
                     secure: mode == "PROD" ? true : false,
                     sameSite: mode == "PROD" ? "none" :"lax",
                     path: '/',
+                    maxAge: 30 * 24 * 60 * 60 * 1000, 
+
                 });
             }
 
