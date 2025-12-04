@@ -69,7 +69,6 @@ export class UserAuthService{
                     httpOnly: true,
                     secure: mode === "PROD" ? true : false,
                     sameSite: mode === "PROD" ? "none" :"lax",
-                    domain:mode === "PROD" ? ".onrender.com" : undefined,
                     path: '/',
                     maxAge: 30 * 24 * 60 * 60 * 1000, 
                 });
