@@ -67,7 +67,7 @@ export class UserAuthService{
                 console.log("mode save session:",mode);
                 res.cookie('session_id', id, {
                     httpOnly: true,
-                    domain:mode == "PROD" ? "https://dasmar-fe.onrender.com" : undefined,
+                    domain:mode == "PROD" ? ".onrender.com" : undefined,
                     secure: mode == "PROD" ? true : false,
                     sameSite: mode == "PROD" ? "none" :"lax",
                     path: '/',
