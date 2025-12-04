@@ -15,7 +15,7 @@ export class LoginService {
 
 
 
-  
+
 
   constructor(
     private prisma:PrismaService,
@@ -36,6 +36,8 @@ export class LoginService {
     if(!user){
       throw new UnauthorizedException("Invalid credential,user not found!");
     }
+
+    console.log("ajunge in loogin user:",user);
     
     const { accessToken, refreshToken } = await this.userAuthService.generateTokens({
       id: user.id,
@@ -56,7 +58,7 @@ export class LoginService {
     const deviceName = `${parsed.deviceModel} · ${parsed.os} · ${parsed.browser}`;
 
     let sessionId = 0;
-
+      console.log("inainte de sesiune")
       try {
         sessionId = await this.sessionService.createSession({
           userId: user.id,

@@ -31,12 +31,11 @@ async function bootstrap() {
       // });
 
       app.enableCors({
-  origin: (origin, cb) => {
-    const allowed = [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://dasmar-fe.onrender.com", 
-    ];
+        origin: (origin, cb) => {
+          const allowed = [
+            "http://localhost:3000",
+            "https://dasmar-fe.onrender.com", 
+          ];
 
     // Permite TOATE subdomeniile *.onrender.com ale frontendului
     if (!origin || allowed.includes(origin) || /https:\/\/dasmar-fe.*\.onrender\.com$/.test(origin)) {
