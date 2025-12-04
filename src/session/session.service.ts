@@ -26,7 +26,7 @@ export class SessionService {
       refreshTokenHash: sessionData.refreshTokenHash,
       createdAt: Date.now(),
       expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 7,
-      role:Role.ADMIN
+      role:Role.USER
     };
 
     await this.redis.set(
