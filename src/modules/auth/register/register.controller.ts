@@ -48,7 +48,6 @@ export class RegisterController {
   //   return this.userService.update(+id, updateUserDto);
   // }
   // @SetMetadata('role', [Role.ADMIN])
-  @Roles(Role.EDITOR)
   // @UseGuards(RolesGuard)
   // @UseGuards(JwtAuthGuard)
   @Delete(':id')
