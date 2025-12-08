@@ -8,9 +8,9 @@ import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { Role } from "@prisma/client";
-import { AuthJwtPayload } from "../common/types/auth-jwtPayload";
+import { AuthJwtPayload } from "../types/auth-jwtPayload";
 import { RegisterService } from "../register/register.service";
-import { CurrentUser } from 'src/modules/auth/common/types/current-user';
+import { CurrentUser } from 'src/modules/auth/types/current-user';
 
 @Injectable()
 export class UserAuthService{

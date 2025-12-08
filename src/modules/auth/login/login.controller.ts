@@ -10,7 +10,8 @@ import {
   UseGuards,
   Param,
   ParseIntPipe,
-  NotFoundException
+  NotFoundException,
+  Body
 } from '@nestjs/common';
 import { LoginService } from './login.service';
 import { LocalAuthGuard } from '../common/guards/local-auth/local-auth.guard';
@@ -25,6 +26,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { ConfigType } from '@nestjs/config';
 import jwtConfig from '../common/config/jwt.config';
 import { UserSessionService } from '../utils/session-service';
+import { LoginUserDto } from '../dto/login.dto';
 
 @Controller('auth')
 export class LoginController {
@@ -47,12 +49,14 @@ export class LoginController {
     return { message: 'Public route' };
   }
 
+
   @Post('login')
   @UseGuards(LocalAuthGuard)
     @ApiOperation({summary:"User login"})
     @ApiResponse({status:200,description:"User succes login"})
     @ApiResponse({ status: 401, description: 'Invalid credentials.' })
    async login(
+  @Body() dto:LoginUserDto,
   @Req() req,
   @Res({ passthrough: true }) res: Response
 ) {

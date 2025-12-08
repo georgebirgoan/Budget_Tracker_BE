@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-
+import { GlobalExceptionFilter } from './modules/auth/helper/error-function';
 
 
 async function bootstrap() {
@@ -16,11 +16,12 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, 
+    whitelist: true,
+    forbidNonWhitelisted:true,
     transform: true,
   }));
 
-   
+   app.useGlobalFilters(new GlobalExceptionFilter());
       // app.enableCors({
       //   origin: [
       //     "https://dasmar-fe.onrender.com"     // PROD FRONT eu
@@ -37,15 +38,15 @@ async function bootstrap() {
             "https://dasmar-fe.onrender.com", 
           ];
 
-    // Permite TOATE subdomeniile *.onrender.com ale frontendului
-    if (!origin || allowed.includes(origin) || /https:\/\/dasmar-fe.*\.onrender\.com$/.test(origin)) {
-      cb(null, true);
-    } else {
-      cb(new Error("CORS blocked: " + origin));
-    }
-  },
-  credentials: true,
-});
+        // Permite TOATE subdomeniile *.onrender.com ale frontendului
+        if (!origin || allowed.includes(origin) || /https:\/\/dasmar-fe.*\.onrender\.com$/.test(origin)) {
+          cb(null, true);
+        } else {
+          cb(new Error("CORS blocked: " + origin));
+        }
+      },
+      credentials: true,
+    });
 
 
    const config = new DocumentBuilder()
@@ -57,7 +58,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  //  Swagger UI at http://localhost:3000/api
+  // swagger http://localhost:3000/api
   SwaggerModule.setup('api', app, document);
 
   await app.listen(8000,'0.0.0.0');

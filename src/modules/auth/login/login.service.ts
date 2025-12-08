@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import jwtConfig from '../common/config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
@@ -10,6 +10,8 @@ import { UserSessionService } from '../utils/session-service';
 import { SessionService } from 'src/session/session.service';
 import { REDIS, RedisModule } from 'src/redis/redis.module';
 import { SessionData } from '../types/sessionInterface';
+import { AppError } from 'src/error/AppError';
+import { LoginUserDto } from '../dto/login.dto';
 @Injectable()
 export class LoginService {
 
@@ -34,9 +36,9 @@ export class LoginService {
     const user = await this.userAuthService.findUser(userId);
     
     if(!user){
-      throw new UnauthorizedException("Invalid credential,user not found!");
+      throw new NotFoundException("User not found!");
     }
-
+      
     console.log("ajunge in loogin user:",user);
     
     const { accessToken, refreshToken } = await this.userAuthService.generateTokens({
@@ -45,6 +47,10 @@ export class LoginService {
       fullName: user.fullName ?? "",
       role: user.role
     });
+  
+    if(!accessToken || !refreshToken){
+      throw new UnauthorizedException("Access or refresh token invalid!");
+    }
 
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
@@ -68,7 +74,7 @@ export class LoginService {
           refreshTokenHash,
         });
       } catch (err) {
-        throw new InternalServerErrorException("Failed to create user session");
+        throw new InternalServerErrorException("Failed to create user session!");
       }
 
     await this.userAuthService.saveAccesToken(res,accessToken);
