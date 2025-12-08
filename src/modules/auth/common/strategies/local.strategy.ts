@@ -17,10 +17,10 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
     if (!password || password.length === 0) {
       throw new UnauthorizedException('Please provide the password');
     }
-    const user = await this.userAuthService.validateUser(email, password);
-    if (!user ||  user === null || user.email === " User not found" || user.password === "Invalid password") {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-    return user; 
+    // const user = await this.userAuthService.validateUser(email, password);
+    // if (!user ||  user === null || user.email === " User not found" || user.password === "Invalid password") {
+    //   throw new UnauthorizedException('Invalid email or password');
+    // }
+    // return user; 
   }
 }

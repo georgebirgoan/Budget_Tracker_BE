@@ -23,6 +23,7 @@ export class LoginService {
     private prisma:PrismaService,
     private userAuthService:UserAuthService,
     private sessionService:SessionService,
+    dto:LoginUserDto,
     private readonly jwtService: JwtService,
     @Inject(REDIS) private readonly redis,
     @Inject(jwtConfig.KEY)
@@ -30,9 +31,8 @@ export class LoginService {
   ) {}
  
 
-  async login(req: Request, userId: number, res: Response) {
-    const user = await this.userAuthService.findUser(userId);
-    
+  async login(dto:LoginUserDto, res: Response,req:Request) {
+    const user  = await this.userAuthService.validateUser(dto.email,dto.password)
     if(!user){
       throw new NotFoundException("Utilizatorul curent nu exista!");
     }

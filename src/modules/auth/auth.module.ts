@@ -14,6 +14,7 @@ import { RegisterService } from './register/register.service';
 import { UserAuthService } from './utils/user-service';
 import { UserSessionService } from './utils/session-service';
 import { SessionModule } from 'src/session/session.module';
+import { LoginUserDto } from './dto/login.dto';
 
 
 @Module({
@@ -27,7 +28,6 @@ import { SessionModule } from 'src/session/session.module';
       inject: [jwtConfig.KEY],
         useFactory: (jwtCfg: ConfigType<typeof jwtConfig>) => ({ secret: jwtCfg.secret, signOptions: { expiresIn: jwtCfg.expiresIn as JwtSignOptions['expiresIn'] }, }),
         }),
-
   ],
   controllers: [
     LoginController,
@@ -40,7 +40,8 @@ import { SessionModule } from 'src/session/session.module';
     RefreshJwtStrategy,
     LocalStrategy,
     UserAuthService,
-    UserSessionService
+    UserSessionService,
+    LoginUserDto
   ],
   exports: [JwtModule],
 })

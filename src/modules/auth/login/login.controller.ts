@@ -9,17 +9,15 @@ import {
   Res,
   UseGuards,
   Param,
+  Body,
   ParseIntPipe,
   NotFoundException,
-  Body
 } from '@nestjs/common';
 import { LoginService } from './login.service';
 import { LocalAuthGuard } from '../common/guards/local-auth/local-auth.guard';
-import { RefreshAuthGuard } from '../common/guards/refresh-auth/refresh-auth.guard';
-import { JwtAuthGuard } from '../common/guards/jwt-auth/jwt-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { GoogleAuthGuard } from '../common/guards/google-auth/google-auth.guard';
-import type { Response } from 'express';
+import type { Response,Request } from 'express';
 import { ApiOperation,ApiResponse } from '@nestjs/swagger';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -33,6 +31,7 @@ export class LoginController {
   constructor(
     private loginService: LoginService,
     private userSessionService:UserSessionService,
+
     private prisma:PrismaService,
     private jwtService:JwtService,
      @Inject(jwtConfig.KEY) private jwtCfg: ConfigType<typeof jwtConfig>,
@@ -50,17 +49,17 @@ export class LoginController {
   }
 
 
+  // @UseGuards(LocalAuthGuard)
   @Post('login')
-  @UseGuards(LocalAuthGuard)
     @ApiOperation({summary:"User login"})
     @ApiResponse({status:200,description:"User succes login"})
     @ApiResponse({ status: 401, description: 'Parola gresita!.' })
    async login(
   @Body() dto:LoginUserDto,
-  @Req() req,
+  @Req() req:Request,
   @Res({ passthrough: true }) res: Response
 ) {
-  const result = await this.loginService.login(req,req.user.id,res);
+  const result = await this.loginService.login(dto,res,req);
   return result;
   }
 

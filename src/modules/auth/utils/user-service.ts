@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException,Inject,UnauthorizedException} from "@nestjs/common";
+import { Injectable, NotFoundException,Inject,UnauthorizedException, ForbiddenException} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service"
 import {Request,Response} from 'express';
 import { mode } from "src/utils/constants";
@@ -11,6 +11,7 @@ import { Role } from "@prisma/client";
 import { AuthJwtPayload } from "../types/auth-jwtPayload";
 import { RegisterService } from "../register/register.service";
 import { CurrentUser } from 'src/modules/auth/types/current-user';
+import { tr } from "zod/v4/locales";
 
 @Injectable()
 export class UserAuthService{
@@ -218,21 +219,33 @@ async generateTokens(
 
     return { accessToken, refreshToken, user };
     }
-    
-
 
 
     async validateUser(email: string, password: string) {
         const user = await this.prisma.user.findUnique({
-        where:{email}
+        where:{email},
+        select:{
+            id:true,
+            email:true,
+            password:true,
+            fullName:true,
+            isActive:true,
+            role:true
+        }
         });
 
-        if (!user) throw new UnauthorizedException('User not found');
-        
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) throw new UnauthorizedException('Password  is not matching!');
+        if (!user) throw new UnauthorizedException('Email sau parola gresite!');
 
-        return user;
+        // if(user.isActive === false){
+        //     throw new ForbiddenException("Contul este dezactivat!")
+        // }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) throw new UnauthorizedException('Email sau parola gresita!');
+        
+        const { password: _, ...userFaraParola } = user;
+
+        return userFaraParola;
 }
 
 
