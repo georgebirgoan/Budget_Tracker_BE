@@ -202,7 +202,7 @@ async generateTokens(
     });
     
     if(!accessToken){
-        throw new NotFoundException("Nu sa realizat acces token!");
+        throw new NotFoundException("Nu se poate prelua access token!");
     }
 
     const refreshToken = await this.jwtService.signAsync(payload, {
@@ -212,7 +212,7 @@ async generateTokens(
     
     
     if(!refreshToken){
-        throw new NotFoundException("Nu sa realizat refresh token!");
+        throw new NotFoundException("Nu se poate prelua refresh token!");
     }
 
 

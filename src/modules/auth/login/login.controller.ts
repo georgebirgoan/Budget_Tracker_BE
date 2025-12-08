@@ -54,7 +54,7 @@ export class LoginController {
   @UseGuards(LocalAuthGuard)
     @ApiOperation({summary:"User login"})
     @ApiResponse({status:200,description:"User succes login"})
-    @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+    @ApiResponse({ status: 401, description: 'Parola gresita!.' })
    async login(
   @Body() dto:LoginUserDto,
   @Req() req,

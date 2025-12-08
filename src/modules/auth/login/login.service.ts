@@ -28,15 +28,13 @@ export class LoginService {
     @Inject(jwtConfig.KEY)
     private readonly jwtCfg: ConfigType<typeof jwtConfig>,
   ) {}
-
-
  
 
   async login(req: Request, userId: number, res: Response) {
     const user = await this.userAuthService.findUser(userId);
     
     if(!user){
-      throw new NotFoundException("User not found!");
+      throw new NotFoundException("Utilizatorul curent nu exista!");
     }
       
     console.log("ajunge in loogin user:",user);
@@ -49,7 +47,7 @@ export class LoginService {
     });
   
     if(!accessToken || !refreshToken){
-      throw new UnauthorizedException("Access or refresh token invalid!");
+      throw new UnauthorizedException("Access/Refresh token nu exista!");
     }
 
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
@@ -74,7 +72,7 @@ export class LoginService {
           refreshTokenHash,
         });
       } catch (err) {
-        throw new InternalServerErrorException("Failed to create user session!");
+        throw new InternalServerErrorException("Eroare la crearea sesiuni pentru utlizator!");
       }
 
     await this.userAuthService.saveAccesToken(res,accessToken);
@@ -82,7 +80,7 @@ export class LoginService {
     await this.userAuthService.saveSessionId(res,sessionId);
     
     return {
-      message: 'Login successful',
+      message: 'Logare cu succes!',
       user: {
         id: user.id,
         email: user.email,
@@ -94,7 +92,7 @@ export class LoginService {
 
 
 async getAllSessions() {
-  const keys = await this.redis.keys("session:*"); // get all session keys
+  const keys = await this.redis.keys("session:*");
 
   const sessions :SessionData[] =[];
 
@@ -113,13 +111,13 @@ async getAllSessions() {
 
 async getSession(sessionId: string): Promise<SessionData> {
   if (!sessionId) {
-    throw new UnauthorizedException("Missing session ID");
+    throw new UnauthorizedException("Nu exista sesiune ID pentru utlizatorul curent!");
   }
   const data = await this.redis.get(`session:${sessionId}`);
   console.log("data session",data);
 
   if (!data) {
-    throw new NotFoundException("Session not found");
+    throw new NotFoundException("Nu s-a putut gasi sesiune pentru id-ul dat!");
   }
 
   return JSON.parse(data) as SessionData;
