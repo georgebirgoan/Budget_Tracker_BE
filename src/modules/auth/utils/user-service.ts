@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException,Inject,UnauthorizedException, ForbiddenException} from "@nestjs/common";
+import { Injectable, NotFoundException,Inject,UnauthorizedException} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service"
 import {Request,Response} from 'express';
 import { mode } from "src/utils/constants";
@@ -7,11 +7,11 @@ import jwtConfig from '../common/config/jwt.config';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { Role } from "@prisma/client";
 import { AuthJwtPayload } from "../types/auth-jwtPayload";
 import { RegisterService } from "../register/register.service";
 import { CurrentUser } from 'src/modules/auth/types/current-user';
-import { tr } from "zod/v4/locales";
+import { Role } from "@prisma/client";
+
 
 @Injectable()
 export class UserAuthService{
@@ -118,10 +118,9 @@ export class UserAuthService{
     async refreshTokensFromValue(refreshToken: string) {
         let payload: any;
 
-  // 1. Verify refresh JWT (signature + expiration)
   try {
     payload = this.jwtService.verify(refreshToken, {
-      secret: this.refreshCfg.secret, // ✅ use refreshCfg.secret
+      secret: this.refreshCfg.secret, 
     });
   } catch (err) {
     throw new UnauthorizedException("Invalid or expired refresh token");
@@ -132,12 +131,11 @@ export class UserAuthService{
     throw new UnauthorizedException("Invalid refresh token payload");
   }
 
-  // 2. Load ALL active sessions for this user (multi-device support)
   const sessions = await this.prisma.session.findMany({
     where: {
       userId,
       revoked: false,
-      expiresAt: { gt: new Date() }, // ✅ ignore expired sessions
+      expiresAt: { gt: new Date() },
     },
   });
 
@@ -145,7 +143,6 @@ export class UserAuthService{
     throw new UnauthorizedException("Nu exista sesiune activa pentru user!");
   }
 
-  // 3. Find which session matches this refresh token (hash compare)
   let matchedSession: (typeof sessions)[number] | null = null;
 
   for (const session of sessions) {
@@ -157,19 +154,15 @@ export class UserAuthService{
   }
 
   if (!matchedSession) {
-    // Optional: here you could revoke all sessions for safety
     throw new UnauthorizedException("Refresh token does not match any active session");
   }
 
-  // 4. Load user
   const user = await this.findUser(userId);
 
-  // 5. Generate new tokens (rotation)
   const { accessToken, refreshToken: newRefreshToken } = await this.generateTokens(
     user,
   );
 
-  // 6. Update ONLY this session (this device) with new refresh token hash
   await this.prisma.session.update({
     where: { id: matchedSession.id },
     data: {
@@ -178,7 +171,6 @@ export class UserAuthService{
     },
   });
 
-  // 7. Return tokens + user
   return { accessToken, refreshToken: newRefreshToken, user };
 }
 
@@ -233,7 +225,7 @@ async generateTokens(
             role:true
         }
         });
-
+        console.log("user",user);
         if (!user) throw new UnauthorizedException('Email sau parola gresite!');
 
         // if(user.isActive === false){

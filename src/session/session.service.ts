@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { REDIS } from '../redis/redis.module';
 import { SessionData } from 'src/modules/auth/types/sessionInterface';
-import { Role } from 'src/modules/auth/common/enums/role.enum';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class SessionService {
@@ -13,6 +13,7 @@ export class SessionService {
     userAgent: string;
     deviceName: string;
     refreshTokenHash: string;
+    role:Role
   }) {
 
     const sessionId = await this.redis.incr("session_counter");
@@ -26,13 +27,13 @@ export class SessionService {
       refreshTokenHash: sessionData.refreshTokenHash,
       createdAt: Date.now(),
       expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 7,
-      role:Role.USER
+      role:sessionData.role
     };
 
     await this.redis.set(
       `session:${sessionId}`,
       JSON.stringify(payload),
-      { EX: 60 * 60 * 24 * 7 } // 7 zile
+      { EX: 60 * 60 * 24 * 7 } // pe 7 zile
     );
 
     return sessionId;

@@ -55,11 +55,11 @@ export class LoginController {
     @ApiResponse({status:200,description:"User succes login"})
     @ApiResponse({ status: 401, description: 'Parola gresita!.' })
    async login(
-  @Body() dto:LoginUserDto,
+  @Body() data:LoginUserDto,
   @Req() req:Request,
   @Res({ passthrough: true }) res: Response
 ) {
-  const result = await this.loginService.login(dto,res,req);
+  const result = await this.loginService.login(data,res,req);
   return result;
   }
 

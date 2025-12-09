@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {  Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import jwtConfig from '../common/config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
@@ -6,11 +6,9 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Request, Response } from 'express'
 import { UserAuthService } from '../utils/user-service';
-import { UserSessionService } from '../utils/session-service';
 import { SessionService } from 'src/session/session.service';
-import { REDIS, RedisModule } from 'src/redis/redis.module';
+import { REDIS } from 'src/redis/redis.module';
 import { SessionData } from '../types/sessionInterface';
-import { AppError } from 'src/error/AppError';
 import { LoginUserDto } from '../dto/login.dto';
 @Injectable()
 export class LoginService {
@@ -32,6 +30,10 @@ export class LoginService {
  
 
   async login(dto:LoginUserDto, res: Response,req:Request) {
+    if(!dto.email || !dto.password){
+      throw new NotFoundException("Email-ul sau parola nu exista!");
+    }
+  
     const user  = await this.userAuthService.validateUser(dto.email,dto.password)
     if(!user){
       throw new NotFoundException("Utilizatorul curent nu exista!");
@@ -70,6 +72,7 @@ export class LoginService {
           userAgent,
           deviceName,
           refreshTokenHash,
+          role:user.role
         });
       } catch (err) {
         throw new InternalServerErrorException("Eroare la crearea sesiuni pentru utlizator!");
