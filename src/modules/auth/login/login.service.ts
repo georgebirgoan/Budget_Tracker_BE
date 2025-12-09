@@ -63,7 +63,7 @@ export class LoginService {
     const parsed = this.userAuthService.parseDevice(userAgent);
     const deviceName = `${parsed.deviceModel} · ${parsed.os} · ${parsed.browser}`;
 
-    let sessionId = 0;
+    let sessionId = " ";
       console.log("inainte de sesiune")
       try {
         sessionId = await this.sessionService.createSession({

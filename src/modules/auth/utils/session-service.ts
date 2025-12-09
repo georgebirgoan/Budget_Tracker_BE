@@ -111,14 +111,12 @@ export class UserSessionService{
 
 
 
-   async revokeSession(sessionId: number) {
+   async revokeSession(sessionId: string) {
   const key = `session:${sessionId}`;
   const exists = await this.redis.exists(key);
   if (!exists) {
     return false;
   }
-
- 
   await this.redis.del(key);
 
   return true;

@@ -65,19 +65,6 @@ export class RegisterService {
       throw error;
     }
   }
-
-  /**
-   * Updates the hashed refresh token for a user.
-   */
-  // async updateHashedRefreshToken(userId: number) {
-  //   return this.prisma.user.update({
-  //     where: { id: userId }
-  //   });
-  // }
-
-  /**
-   * Finds a user by email.
-   */
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
@@ -94,9 +81,6 @@ export class RegisterService {
     return user;
     }
 
-  /**
-   * Finds a user by ID.
-   */
   async findOne(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
@@ -109,16 +93,11 @@ export class RegisterService {
     });
   }
 
-  /**
-   * Returns all users.
-   */
+ 
   async findAll() {
     return this.prisma.user.findMany();
   }
 
-  /**
-   * Removes a user by ID.
-   */
   async remove(id: number) {
     return this.prisma.user.delete({
       where: { id },

@@ -92,7 +92,7 @@ async getCurrentSession(
 
 @Post("logout/:id")
 async logout(
-  @Param("id") sessionId: number,
+  @Param("id") sessionId: string,
   @Res({ passthrough: true }) res: Response
 ) {
   const deleted = await this.userSessionService.revokeSession(sessionId);

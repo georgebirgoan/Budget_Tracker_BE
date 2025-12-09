@@ -64,7 +64,7 @@ export class UserAuthService{
             });
         }
        
-        async saveSessionId(res:Response,id:number){
+        async saveSessionId(res:Response,id:string){
                 console.log("mode save session:",mode);
                 res.cookie('session_id', id, {
                     httpOnly: true,

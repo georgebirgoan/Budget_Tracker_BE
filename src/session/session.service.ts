@@ -2,10 +2,18 @@ import { Inject, Injectable } from '@nestjs/common';
 import { REDIS } from '../redis/redis.module';
 import { SessionData } from 'src/modules/auth/types/sessionInterface';
 import { Role } from '@prisma/client';
+import { randomBytes } from 'crypto';
+
 
 @Injectable()
 export class SessionService {
   constructor(@Inject(REDIS) private readonly redis) {}
+
+
+  
+  private generateSessionId(): string {
+    return randomBytes(32).toString("hex"); 
+  }
 
   async createSession(sessionData: {
     userId: number;
@@ -16,8 +24,8 @@ export class SessionService {
     role:Role
   }) {
 
-    const sessionId = await this.redis.incr("session_counter");
-
+    const sessionId = this.generateSessionId();
+    console.log("sesionIddd:",sessionId)
     const payload :SessionData = {
       sessionId,
       userId: sessionData.userId,
