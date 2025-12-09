@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail,MinLength,MaxLength, IsString,Matches, IsBoolean, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail,MinLength,MaxLength, IsString,Matches, IsBoolean, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   @IsNotEmpty({message:"Acest camp este obligatoriu!"})
@@ -54,5 +55,8 @@ export class CreateUserDto {
   })
   password: string;
 
-
+  @IsOptional()
+  @IsNumber()
+  @Type(()=>Number)
+  sessionId: number;
 }

@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import { Role } from '@prisma/client';
+import { SessionService } from 'src/session/session.service';
 
 
 
@@ -15,15 +16,22 @@ export class RegisterService {
     @Inject(refreshJwtConfig.KEY)
      private readonly refreshConfig: ConfigType<typeof refreshJwtConfig>,
     private readonly prisma: PrismaService,
+    private sessionService:SessionService,
     private readonly jwtService : JwtService
   ) {}
 
-  /**
-   * Creates a new user in the database.
-   */
+
   async create(createUserDto: CreateUserDto) {
     try {
+      const sessionId = createUserDto.sessionId;
+      console.log("sessionId din front pt register",sessionId);
 
+      const checkSessionId  = await  this.sessionService.getSession(sessionId);
+      
+      if(!checkSessionId || Object.keys(checkSessionId).length === 0){
+        throw new NotFoundException("Nu s-a gasit sesiune pentru userul dat!");
+      }
+    
       const existUser = await this.prisma.user.findUnique({
         where:{email:createUserDto.email}
       })
