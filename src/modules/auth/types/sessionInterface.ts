@@ -3,12 +3,13 @@ import { Role } from "@prisma/client";
 
 export interface SessionData {
   sessionId: string;
+  email:string,
+  fullName:string,
   userId: number;
-  ip: string | null;
   userAgent: string | null;
   deviceName: string | null;
-  refreshTokenHash: string | null;
-  createdAt: number; 
-  expiresAt: number;
+  createdAt: string; 
+  expiresAt: string;
+  deconectedAt:string;
   role:Role
 }

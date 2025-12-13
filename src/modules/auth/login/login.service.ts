@@ -33,14 +33,10 @@ export class LoginService {
     if(!dto.email || !dto.password){
       throw new NotFoundException("Email-ul sau parola nu exista!");
     }
-  
     const user  = await this.userAuthService.validateUser(dto.email,dto.password)
     if(!user){
       throw new NotFoundException("Utilizatorul curent nu exista!");
     }
-      
-    console.log("ajunge in loogin user:",user);
-    
     const { accessToken, refreshToken } = await this.userAuthService.generateTokens({
       id: user.id,
       email: user.email,
@@ -52,27 +48,34 @@ export class LoginService {
       throw new UnauthorizedException("Access/Refresh token nu exista!");
     }
 
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+    // const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
-    const ip =
-      req.headers['x-forwarded-for']?.toString() ||
-      req.socket.remoteAddress ||
-      "undefined";
+    // const ip =
+    //   req.headers['x-forwarded-for']?.toString() ||
+    //   req.socket.remoteAddress ||
+    //   "undefined";
 
     const userAgent = req.headers['user-agent'] || "undefined user agent";
     const parsed = this.userAuthService.parseDevice(userAgent);
     const deviceName = `${parsed.deviceModel} · ${parsed.os} · ${parsed.browser}`;
-
+    
+    const userData = await this.redis.hGetAll(`userId:${user.id}`)
+    
+    if(!userData){
+      throw new NotFoundException("Nu exista utilizatorul in Redis!");
+    }
+    const lastDeconcted = userData?.deconectedAt ?? null;
+    
     let sessionId = " ";
-      console.log("inainte de sesiune")
       try {
         sessionId = await this.sessionService.createSession({
-          userId: user.id,
-          ip,
-          userAgent,
-          deviceName,
-          refreshTokenHash,
-          role:user.role
+        deconectedAt:lastDeconcted,
+        email:user.email,
+        fullName:user.fullName,
+        userId: user.id,
+        userAgent,
+        deviceName,
+        role:user.role
         });
       } catch (err) {
         throw new InternalServerErrorException("Eroare la crearea sesiuni pentru utlizator!");

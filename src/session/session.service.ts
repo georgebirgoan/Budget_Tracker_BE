@@ -16,25 +16,28 @@ export class SessionService {
   }
 
   async createSession(sessionData: {
+    deconectedAt:string,
+    email:string,
+    fullName:string,
     userId: number;
-    ip: string;
     userAgent: string;
     deviceName: string;
-    refreshTokenHash: string;
     role:Role
   }) {
 
     const sessionId = this.generateSessionId();
     console.log("sesionIddd:",sessionId)
+
     const payload :SessionData = {
       sessionId,
+      deconectedAt:sessionData.deconectedAt,
+      email:sessionData.email,
+      fullName:sessionData.fullName,
       userId: sessionData.userId,
-      ip: sessionData.ip,
       userAgent: sessionData.userAgent,
       deviceName: sessionData.deviceName,
-      refreshTokenHash: sessionData.refreshTokenHash,
-      createdAt: Date.now(),
-      expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       role:sessionData.role
     };
 

@@ -83,28 +83,36 @@ async getCurrentSession(
   @Req() req,
 ) {
   const sessionId = req.cookies.session_id;
-  console.log("sessionId:",sessionId);
   if(!sessionId){
-    throw new NotFoundException("Nu s-a gasit sesion id:");
+    throw new NotFoundException("Nu exista nici o seseiune validă pentru dvs!");
   }
   return this.loginService.getSession(sessionId);
 }
+
 
 @Post("logout/:id")
 async logout(
   @Param("id") sessionId: string,
   @Res({ passthrough: true }) res: Response
 ) {
-  const deleted = await this.userSessionService.revokeSession(sessionId);
+  try {
+    const session = await this.userSessionService.revokeSession(sessionId);
 
-  res.clearCookie("access_token");
-  res.clearCookie("refresh_token");
-  res.clearCookie("session_id");
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+    res.clearCookie("session_id");
 
-  if (!deleted) {
-    throw new NotFoundException("Session not found or already revoked");
+    if (!session) {
+      throw new NotFoundException("Nu exista sesiune pentru userul dat!");
+    }
+
+    await this.userSessionService.updateDeconected(session.userId);
+
+    return { message: "Delogare cu success!" };
+  } catch (error) {
+    console.error("Error in logout():", error);
+    throw error;
   }
-  return { message: "Logout successful" };
 }
 
 

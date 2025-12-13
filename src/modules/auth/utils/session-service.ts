@@ -112,16 +112,24 @@ export class UserSessionService{
 
 
    async revokeSession(sessionId: string) {
-  const key = `session:${sessionId}`;
-  const exists = await this.redis.exists(key);
-  if (!exists) {
-    return false;
-  }
-  await this.redis.del(key);
+        const raw = await this.redis.get(`session:${sessionId}`);
+        if (!raw) return null;
 
-  return true;
+        const session = JSON.parse(raw);
+
+
+        return session; 
 }
 
-   
 
+async updateDeconected(userId:string){
+   try{
+    if(!userId){
+        throw new NotFoundException("Nu sa gasit user Id");
+    }
+       await this.redis.hSet(`userId:${userId}`, "deconectedAt", new Date().toISOString());
+   }catch(err){
+        throw new NotFoundException("Eroare UPDATE deconected! ",err);
+   }
+}
 }
