@@ -1,3 +1,5 @@
+import { SessionUserType } from './../types/sessionType';
+import { Role } from '@prisma/client';
 import {  Inject, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import jwtConfig from '../common/config/jwt.config';
@@ -10,10 +12,17 @@ import { SessionService } from 'src/session/session.service';
 import { REDIS } from 'src/redis/redis.module';
 import { SessionData } from '../types/sessionInterface';
 import { LoginUserDto } from '../dto/login.dto';
+import refreshJwtConfig from '../common/config/refresh-jwt.config';
 @Injectable()
 export class LoginService {
 
-
+/*
+1.Create sesion
+2.generate acces token/refresh
+3.hash refresh
+4.update sesion with refresh token hash
+5.set cookie
+*/ 
 
 
 
@@ -24,10 +33,99 @@ export class LoginService {
     dto:LoginUserDto,
     private readonly jwtService: JwtService,
     @Inject(REDIS) private readonly redis,
-    @Inject(jwtConfig.KEY)
+  @Inject(jwtConfig.KEY)
     private readonly jwtCfg: ConfigType<typeof jwtConfig>,
+    
+    @Inject(refreshJwtConfig.KEY)
+    private readonly refreshCfg: ConfigType<typeof refreshJwtConfig>
   ) {}
- 
+  
+
+
+
+
+  async checkSignature(refreshToken:string):Promise<{sub:number;sessionId:number}>{
+  {
+    try {
+      const payload = await this.jwtService.verifyAsync<{sub:number,sessionId:number}>
+      (
+        refreshToken, 
+        {
+        secret: this.refreshCfg.secret,
+      });
+      return payload;
+    } catch(e:any) {
+      console.log('refresh eroare ',e?.name,e?.message)
+      throw new UnauthorizedException('Invalid/expired refresh token');
+    }
+  }
+}
+  
+
+
+
+async setNewTokens(session:SessionUserType){
+   const accessPayload = {
+      sub: session.user.id,
+      sessionId: session.id,
+      email: session.user.email,
+      fullName: session.user.fullName ?? '',
+      role: session.user.role,
+    };
+
+  const newAccessToken = await this.jwtService.signAsync(accessPayload, {
+    secret: this.jwtCfg.secret,
+    expiresIn: this.jwtCfg.expiresIn as any,
+  });
+
+  const newRefreshToken = await this.jwtService.signAsync(
+    { sub: session.user.id, sessionId: session.id },
+    { secret: this.refreshCfg.secret, expiresIn: this.refreshCfg.expiresIn as any },
+  );
+  return {newAccessToken,newRefreshToken}
+}
+
+
+async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
+    res.cookie('access_token', newAccessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge:15 * 60 * 1000
+  });
+
+  res.cookie('refresh_token', newRefreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    path: '/api/auth/refresh',
+    maxAge:15 * 60 * 1000 
+  });
+}
+
+  async findSessionActive(sessionId:number,userId:number):Promise<SessionUserType | null>{
+  try{
+      const session = await this.prisma.session.findFirst({
+          where: {
+            id: sessionId,
+            userId,
+            revoked: false,
+            expiresAt: { gt: new Date() },
+          },
+          select: {
+            id: true,
+            refreshToken: true,
+            user: {
+               select:
+                { id: true, email: true, fullName: true, role: true } },
+          },
+        });
+        return session;
+  }catch{
+    throw new NotFoundException("Nu existat sesiune activa pentru user!");
+  }
+  }
 
   async login(dto:LoginUserDto, res: Response,req:Request) {
     if(!dto.email || !dto.password){
@@ -37,53 +135,55 @@ export class LoginService {
     if(!user){
       throw new NotFoundException("Utilizatorul curent nu exista!");
     }
-    const { accessToken, refreshToken } = await this.userAuthService.generateTokens({
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName ?? "",
-      role: user.role
-    });
-  
-    if(!accessToken || !refreshToken){
-      throw new UnauthorizedException("Access/Refresh token nu exista!");
-    }
 
-    // const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-
-    // const ip =
-    //   req.headers['x-forwarded-for']?.toString() ||
-    //   req.socket.remoteAddress ||
-    //   "undefined";
+    const ip =
+    req.headers['x-forwarded-for']?.toString() ||
+    req.socket.remoteAddress ||
+    "undefined";
 
     const userAgent = req.headers['user-agent'] || "undefined user agent";
     const parsed = this.userAuthService.parseDevice(userAgent);
     const deviceName = `${parsed.deviceModel} · ${parsed.os} · ${parsed.browser}`;
     
-    const userData = await this.redis.hGetAll(`userId:${user.id}`)
-    
-    if(!userData){
-      throw new NotFoundException("Nu exista utilizatorul in Redis!");
-    }
-    const lastDeconcted = userData?.deconectedAt ?? null;
-    
-    let sessionId = " ";
+    const userId = user.id;
+    let sessionId =0;
       try {
-        sessionId = await this.sessionService.createSession({
-        deconectedAt:lastDeconcted,
-        email:user.email,
-        fullName:user.fullName,
-        userId: user.id,
-        userAgent,
-        deviceName,
-        role:user.role
+      sessionId = await this.sessionService.createSession({
+          userId,
+          deviceName,
+          ip,
+          userAgent
         });
       } catch (err) {
         throw new InternalServerErrorException("Eroare la crearea sesiuni pentru utlizator!");
       }
 
+
+    const { accessToken, refreshTokenHash,refreshToken } = await this.userAuthService.generateTokens({
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName ?? "",
+      role: user.role,
+      sessionId:sessionId
+    });
+  
+    if(!accessToken || !refreshTokenHash){
+      throw new UnauthorizedException("Access/Refresh token nu exista!");
+    }
+
+    await this.userAuthService.updateRefreshToken(sessionId,refreshTokenHash);
+
     await this.userAuthService.saveAccesToken(res,accessToken);
     await this.userAuthService.saveRefreshToken(res,refreshToken);
-    await this.userAuthService.saveSessionId(res,sessionId);
+
+    //pt redis
+    // const userData = await this.redis.hGetAll(`userId:${user.id}`)
+    // if(!userData){
+    //   throw new NotFoundException("Nu exista utilizatorul in Redis!");
+    // }
+    // const lastDeconcted = userData?.deconectedAt ?? null;
+
+    // await this.userAuthService.saveSessionId(res,sessionId);
     
     return {
       message: 'Logare cu succes!',
@@ -115,11 +215,12 @@ async getAllSessions() {
 
 
 
-async getSession(sessionId: string): Promise<SessionData> {
+/*async getSession(sessionId: string): Promise<SessionData> {
   if (!sessionId) {
     throw new UnauthorizedException("Nu exista sesiune ID pentru utlizatorul curent!");
   }
   const data = await this.redis.get(`session:${sessionId}`);
+  // const data = await this.sessionService.
   console.log("data session",data);
 
   if (!data) {
@@ -127,6 +228,35 @@ async getSession(sessionId: string): Promise<SessionData> {
   }
 
   return JSON.parse(data) as SessionData;
+}*/
+
+
+async getSessionUser(userId:number,sessionId:number){
+    const session = await this.prisma.session.findFirst({
+      where:{
+        id:sessionId,
+        userId:userId,
+        revoked:false,
+        expiresAt:{gt:new Date()}
+      },
+
+      select:{
+        id:true,
+        userId:true,
+        deviceName:true,
+        userAgent:true,
+        ip:true,
+        createdAt:true,
+        updatedAt:true,
+        expiresAt:true,
+        revoked:true,
+      }
+    })
+
+    if(!session){
+      throw new UnauthorizedException("Nu exista sesiune valida pentru dvs!");
+    }
+return session;
 }
 
 
@@ -193,13 +323,4 @@ async getSession(sessionId: string): Promise<SessionData> {
 
 
 
-
-
-  async signOut(userId: number) {
-  await this.prisma.session.deleteMany({
-    where: { userId },
-  });
-
-  return true;
-}
 }

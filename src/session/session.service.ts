@@ -1,13 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { REDIS } from '../redis/redis.module';
 import { SessionData } from 'src/modules/auth/types/sessionInterface';
-import { Role } from '@prisma/client';
+import { Role, Session } from '@prisma/client';
 import { randomBytes } from 'crypto';
-
+import { tr } from 'zod/v4/locales';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SessionService {
-  constructor(@Inject(REDIS) private readonly redis) {}
+  constructor(@Inject(REDIS) private readonly redis,
+        private prisma:PrismaService,
+    
+) {}
 
 
   
@@ -16,38 +20,38 @@ export class SessionService {
   }
 
   async createSession(sessionData: {
-    deconectedAt:string,
-    email:string,
-    fullName:string,
-    userId: number;
-    userAgent: string;
-    deviceName: string;
-    role:Role
+    userId:number,
+    deviceName?:string,
+    userAgent?:string,
+    ip?:string
   }) {
 
-    const sessionId = this.generateSessionId();
-    console.log("sesionIddd:",sessionId)
+    // const sessionId = this.generateSessionId();
+      
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const session  = await this.prisma.session.create({
+      data:{
+        userId:sessionData.userId,
+        deviceName:sessionData.deviceName,
+        userAgent:sessionData.userAgent,
+        ip:sessionData.ip,
+        expiresAt:expiresAt,
+        refreshToken:""
+      }
+    })
 
-    const payload :SessionData = {
-      sessionId,
-      deconectedAt:sessionData.deconectedAt,
-      email:sessionData.email,
-      fullName:sessionData.fullName,
-      userId: sessionData.userId,
-      userAgent: sessionData.userAgent,
-      deviceName: sessionData.deviceName,
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      role:sessionData.role
-    };
+  const sessionId = session.id;
+    
+  return sessionId;
 
-    await this.redis.set(
-      `session:${sessionId}`,
-      JSON.stringify(payload),
-      { EX: 60 * 60 * 24 * 7 } // pe 7 zile
-    );
 
-    return sessionId;
+  //pt rediss
+    // await this.redis.set(
+    //   `session:${sessionId}`,
+    //   JSON.stringify(payload),
+    //   { EX: 60 * 60 * 24 * 7 } // pe 7 zile
+    // );
+
   }
 
   async getSession(sessionId: number) {
@@ -58,5 +62,15 @@ export class SessionService {
   async deleteSession(sessionId: number) {
     await this.redis.del(`session:${sessionId}`);
   }
+
+  // async getSessionDB(sessionId:number){
+  //   try{
+  //     const sessFromDb = await this.prisma.session.findUnique({})
+  //   }catch(err){
+
+  //   }
+  // }
+
+  
 }
 

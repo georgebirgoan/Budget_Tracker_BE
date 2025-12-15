@@ -29,7 +29,6 @@ export class UserSessionService{
             deviceName:string
         })
             {
-                
                 return this.prisma.session.create({
                     data: {
                     userId:data.userId,

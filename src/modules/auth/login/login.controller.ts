@@ -12,6 +12,7 @@ import {
   Body,
   ParseIntPipe,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginService } from './login.service';
 import { LocalAuthGuard } from '../common/guards/local-auth/local-auth.guard';
@@ -25,6 +26,11 @@ import type { ConfigType } from '@nestjs/config';
 import jwtConfig from '../common/config/jwt.config';
 import { UserSessionService } from '../utils/session-service';
 import { LoginUserDto } from '../dto/login.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth/jwt-auth.guard';
+import { tr } from 'zod/v4/locales';
+import bcrypt from 'bcrypt';
+import refreshJwtConfig from '../common/config/refresh-jwt.config';
+
 
 @Controller('auth')
 export class LoginController {
@@ -34,7 +40,12 @@ export class LoginController {
 
     private prisma:PrismaService,
     private jwtService:JwtService,
-     @Inject(jwtConfig.KEY) private jwtCfg: ConfigType<typeof jwtConfig>,
+    @Inject(jwtConfig.KEY)
+    private readonly jwtCfg: ConfigType<typeof jwtConfig>,
+     
+    @Inject(refreshJwtConfig.KEY)
+    private readonly refreshCfg: ConfigType<typeof refreshJwtConfig>
+     
   ) {}
 
   @Public()
@@ -65,55 +76,119 @@ export class LoginController {
 
 
 @Get('sessions')
+
+
 @ApiOperation({ summary: "User session" })
 @ApiResponse({ status: 200, description: "User session returned" })
 @ApiResponse({ status: 401, description: "Invalid session." })
 @ApiResponse({ status: 404, description: "Unthorized session." })
+
+
+
 async getAllSession(
-  @Req() req,
   @Res({ passthrough: true }) res: Response
 ) {
   return this.loginService.getAllSessions();
 }
 
 
+
+@Post('refresh')
+@Public()
+async refresh(@Req() req,
+ @Res({ passthrough: true }) res: Response) 
+ {
+  const refreshToken = req.cookies?.refresh_token;
+  if (!refreshToken) throw new UnauthorizedException('Nu exista refresh token!');
+  console.log("refreshhh",refreshToken);
+
+ const  payload = await this.loginService.checkSignature(refreshToken)
+  const userId = payload.sub;
+  const sessionId = payload.sessionId;
+
+  console.log("user iD",userId);
+  console.log("sesionIdd",sessionId);
+
+  const session = await this.loginService.findSessionActive(sessionId,userId);
+  
+  if(!session){
+    throw new UnauthorizedException("Sesiune invalidă! Vă rugăm logați-vă!")
+  }
+
+  if (!session?.refreshToken) {
+    throw new UnauthorizedException('Nu exista nici un refresh token valid!');
+  }
+
+  const ok = await bcrypt.compare(refreshToken, session.refreshToken);
+  if (!ok)
+    {
+      throw new UnauthorizedException('Nepotrivire de chei refresh!');
+    } 
+  const {newAccessToken,newRefreshToken} = await this.loginService.setNewTokens(session);
+
+  const newHash = await bcrypt.hash(newRefreshToken, 10);
+  await this.prisma.session.update({
+    where: { id: session.id },
+    data: { refreshToken: newHash },
+  });
+
+  await this.loginService.setInCookie(res,newAccessToken,newRefreshToken);
+
+  return { ok: true };
+}
+
 @Get('session')
+@UseGuards(JwtAuthGuard)
 @ApiOperation({ summary: "Get current user session_id" })
 async getCurrentSession(
   @Req() req,
 ) {
-  const sessionId = req.cookies.session_id;
+  const userId = req.user.id
+  const sessionId = req.user.sessionId;
   if(!sessionId){
     throw new NotFoundException("Nu exista nici o seseiune validă pentru dvs!");
   }
-  return this.loginService.getSession(sessionId);
-}
+  console.log("sesssioId din cookie:",sessionId);
+  console.log("userId din cookie:",userId);
+  const session = await this.loginService.getSessionUser(userId,sessionId);
 
-
-@Post("logout/:id")
-async logout(
-  @Param("id") sessionId: string,
-  @Res({ passthrough: true }) res: Response
-) {
-  try {
-    const session = await this.userSessionService.revokeSession(sessionId);
-
-    res.clearCookie("access_token");
-    res.clearCookie("refresh_token");
-    res.clearCookie("session_id");
-
-    if (!session) {
-      throw new NotFoundException("Nu exista sesiune pentru userul dat!");
-    }
-
-    await this.userSessionService.updateDeconected(session.userId);
-
-    return { message: "Delogare cu success!" };
-  } catch (error) {
-    console.error("Error in logout():", error);
-    throw error;
+  return{
+    user:{
+      id:req.user.id,
+      email:req.user.email,
+      fullName:req.user.fullName,
+      role:req.user.role
+    },
+    session
   }
+
 }
+
+//logout redis
+// @Post("logout/:id")
+// async logout(
+//   @Param("id") sessionId: string,
+//   @Res({ passthrough: true }) res: Response
+// ) {
+//   try {
+//     const session = await this.userSessionService.revokeSession(sessionId);
+
+//     res.clearCookie("access_token");
+//     res.clearCookie("refresh_token");
+//     res.clearCookie("session_id");
+
+//     if (!session) {
+//       throw new NotFoundException("Nu exista sesiune pentru userul dat!");
+//     }
+
+//     await this.userSessionService.updateDeconected(session.userId);
+
+//     return { message: "Delogare cu success!" };
+//   } catch (error) {
+//     console.error("Error in logout():", error);
+//     throw error;
+//   }
+// }
 
 
 
@@ -137,6 +212,25 @@ async logout(
 
 //   return { message: "Logged out successfully" };
 // }
+
+@Post('logout')
+@UseGuards(JwtAuthGuard)
+async logout(@Req() req,@Res({passthrough:true}) res:Response){
+  const userId = req.user.id;
+  const sessionId = req.user.sessionId;
+  
+  await this.prisma.session.updateMany({
+    where:{id:sessionId,userId},
+    data:{
+      revoked:true
+    }
+  })
+
+  res.clearCookie('access_token');
+  res.clearCookie('refresh_token',{path:'/'});
+
+  return {ok:true}
+}
 
 
 

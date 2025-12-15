@@ -5,4 +5,5 @@ export type AuthJwtPayload = {
   email:string,
   fullName:string | "",
   role:Role
+  sessionId:number
 };

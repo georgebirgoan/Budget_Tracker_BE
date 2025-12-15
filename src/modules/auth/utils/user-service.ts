@@ -11,6 +11,7 @@ import { AuthJwtPayload } from "../types/auth-jwtPayload";
 import { RegisterService } from "../register/register.service";
 import { CurrentUser } from 'src/modules/auth/types/current-user';
 import { Role } from "@prisma/client";
+import { ca } from "zod/v4/locales";
 
 
 @Injectable()
@@ -42,7 +43,6 @@ export class UserAuthService{
     return user;
     }
 
-   
 
     async saveAccesToken(res:Response,access_token:string){
         res.cookie('access_token', access_token, {
@@ -50,7 +50,7 @@ export class UserAuthService{
             secure: mode == "PROD" ? true : false,
             sameSite: mode == "PROD" ? "none" :"lax",
             path: '/',
-            maxAge: 24 * 60 * 60 * 1000,
+            maxAge: 60 * 1000,
           });
     }
 
@@ -63,17 +63,17 @@ export class UserAuthService{
                 maxAge: 30 * 24 * 60 * 60 * 1000, //7d
             });
         }
-       
-        async saveSessionId(res:Response,id:string){
-                console.log("mode save session:",mode);
-                res.cookie('session_id', id, {
-                    httpOnly: true,
-                    secure: mode === "PROD" ? true : false,
-                    sameSite: mode === "PROD" ? "none" :"lax",
-                    path: '/',
-                    maxAge: 30 * 24 * 60 * 60 * 1000, 
-                });
-            }
+    
+    async saveSessionId(res:Response,id:number){
+            console.log("mode save session:",mode);
+            res.cookie('session_id', id, {
+                httpOnly: true,
+                secure: mode === "PROD" ? true : false,
+                sameSite: mode === "PROD" ? "none" :"lax",
+                path: '/',
+                maxAge: 30 * 24 * 60 * 60 * 1000, 
+            });
+        }
 
 
     // async refreshTokensFromValue(refreshToken: string) {
@@ -115,64 +115,64 @@ export class UserAuthService{
     //     throw new UnauthorizedException("Invalid refresh token");
     // }
     // }
-    async refreshTokensFromValue(refreshToken: string) {
-        let payload: any;
+// async refreshTokensFromValue(refreshToken: string) {
+//         let payload: any;
 
-  try {
-    payload = this.jwtService.verify(refreshToken, {
-      secret: this.refreshCfg.secret, 
-    });
-  } catch (err) {
-    throw new UnauthorizedException("Invalid or expired refresh token");
-  }
+//   try {
+//     payload = this.jwtService.verify(refreshToken, {
+//       secret: this.refreshCfg.secret, 
+//     });
+//   } catch (err) {
+//     throw new UnauthorizedException("Invalid or expired refresh token");
+//   }
 
-  const userId = payload.sub;
-  if (!userId) {
-    throw new UnauthorizedException("Invalid refresh token payload");
-  }
+//   const userId = payload.sub;
+//   if (!userId) {
+//     throw new UnauthorizedException("Invalid refresh token payload");
+//   }
 
-  const sessions = await this.prisma.session.findMany({
-    where: {
-      userId,
-      revoked: false,
-      expiresAt: { gt: new Date() },
-    },
-  });
+//   const sessions = await this.prisma.session.findMany({
+//     where: {
+//       userId,
+//       revoked: false,
+//       expiresAt: { gt: new Date() },
+//     },
+//   });
 
-  if (!sessions.length) {
-    throw new UnauthorizedException("Nu exista sesiune activa pentru user!");
-  }
+//   if (!sessions.length) {
+//     throw new UnauthorizedException("Nu exista sesiune activa pentru user!");
+//   }
 
-  let matchedSession: (typeof sessions)[number] | null = null;
+//   let matchedSession: (typeof sessions)[number] | null = null;
 
-  for (const session of sessions) {
-    const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
-    if (isValid) {
-      matchedSession = session;
-      break;
-    }
-  }
+//   for (const session of sessions) {
+//     const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
+//     if (isValid) {
+//       matchedSession = session;
+//       break;
+//     }
+//   }
 
-  if (!matchedSession) {
-    throw new UnauthorizedException("Refresh token does not match any active session");
-  }
+//   if (!matchedSession) {
+//     throw new UnauthorizedException("Refresh token does not match any active session");
+//   }
 
-  const user = await this.findUser(userId);
+//   const user = await this.findUser(userId);
 
-  const { accessToken, refreshToken: newRefreshToken } = await this.generateTokens(
-    user,
-  );
+//   const { accessToken, refreshTokenHash: newRefreshToken } = await this.generateTokens(
+//     user,
+//   );
 
-  await this.prisma.session.update({
-    where: { id: matchedSession.id },
-    data: {
-      refreshToken: await bcrypt.hash(newRefreshToken, 10),
-      updatedAt: new Date(),
-    },
-  });
+//   await this.prisma.session.update({
+//     where: { id: matchedSession.id },
+//     data: {
+//       refreshToken: await bcrypt.hash(newRefreshToken, 10),
+//       updatedAt: new Date(),
+//     },
+//   });
 
-  return { accessToken, refreshToken: newRefreshToken, user };
-}
+//   return { accessToken, refreshToken: newRefreshToken, user };
+// }
 
 
 async generateTokens(
@@ -181,15 +181,17 @@ async generateTokens(
     email: string;
     fullName: string | null;
     role: Role;
+    sessionId:number
     }) {
-    const payload: AuthJwtPayload = {
+    const accesPayload: AuthJwtPayload = {
     sub: user.id,
         email: user.email,
+        sessionId:user.sessionId,
         fullName: user.fullName ?? "",
-        role: user.role,
+        role: user.role
     };
     
-    const accessToken = await this.jwtService.signAsync(payload, {
+    const accessToken = await this.jwtService.signAsync(accesPayload, {
         secret: this.jwtCfg.secret,
         expiresIn: this.jwtCfg.expiresIn as any,
     });
@@ -197,20 +199,26 @@ async generateTokens(
     if(!accessToken){
         throw new NotFoundException("Nu se poate prelua access token!");
     }
+    
+    const refreshPayload={
+        sub:user.id,
+        sessionId:user.sessionId
+    }
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
+    const refreshToken = await this.jwtService.signAsync(refreshPayload, {
         secret: this.refreshCfg.secret,
         expiresIn: this.refreshCfg.expiresIn as any,
     });
     
-    
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
     if(!refreshToken){
         throw new NotFoundException("Nu se poate prelua refresh token!");
     }
 
-
-    return { accessToken, refreshToken, user };
+    return { accessToken, refreshTokenHash,refreshToken, user };
     }
+
 
 
     async validateUser(email: string, password: string) {
@@ -240,7 +248,21 @@ async generateTokens(
         return userFaraParola;
 }
 
+async updateRefreshToken(sessionId:number,refreshToken:string){
+    try{
+       await this.prisma.session.update({
+        where:{id:sessionId},
+        data:{
+            refreshToken
+        }
+       })
 
+    }catch(err){
+        throw new UnauthorizedException("Nu se poate face update la refreshToken!");
+    }
+
+
+}
 
 
     // async validateRefreshToken(refreshToken: string) {
