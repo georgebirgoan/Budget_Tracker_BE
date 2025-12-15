@@ -100,7 +100,7 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
     secure: true,
     sameSite: 'strict',
     path: '/api/auth/refresh',
-    maxAge:15 * 60 * 1000 
+    maxAge: 7 * 24  * 60 * 60 * 1000
   });
 }
 
