@@ -105,7 +105,6 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
 }
 
   async findSessionActive(sessionId:number,userId:number):Promise<SessionUserType | null>{
-  try{
       const session = await this.prisma.session.findFirst({
           where: {
             id: sessionId,
@@ -122,9 +121,6 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
           },
         });
         return session;
-  }catch{
-    throw new NotFoundException("Nu existat sesiune activa pentru user!");
-  }
   }
 
   async login(dto:LoginUserDto, res: Response,req:Request) {

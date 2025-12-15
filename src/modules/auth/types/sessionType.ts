@@ -4,7 +4,7 @@ import { email } from 'zod';
 
 export type SessionUserType={
     id:number,
-    refreshToken:string,
+    refreshToken:string | null,
     user:{
         id:number,
         email:string,
