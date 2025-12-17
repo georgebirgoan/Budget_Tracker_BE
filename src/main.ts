@@ -60,7 +60,7 @@ async function bootstrap() {
 
   // swagger http://localhost:3000/api
   SwaggerModule.setup('api', app, document);
-  
+  console.log('PORTT INAINTE ',Number(process.env.PORT) || 8000)
   const port = Number(process.env.PORT) || 8000; 
 
   await app.listen(port,'0.0.0.0');
