@@ -12,12 +12,8 @@ export class SessionService {
         private prisma:PrismaService,
     
 ) {}
-
-
   
-  private generateSessionId(): string {
-    return randomBytes(32).toString("hex"); 
-  }
+ 
 
   async createSession(sessionData: {
     userId:number,

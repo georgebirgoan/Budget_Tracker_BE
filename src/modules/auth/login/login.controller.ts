@@ -75,23 +75,7 @@ export class LoginController {
   }
 
 
-@Get('sessions')
-
-
-@ApiOperation({ summary: "User session" })
-@ApiResponse({ status: 200, description: "User session returned" })
-@ApiResponse({ status: 401, description: "Invalid session." })
-@ApiResponse({ status: 404, description: "Unthorized session." })
-
-
-
-async getAllSession(
-  @Res({ passthrough: true }) res: Response
-) {
-  return this.loginService.getAllSessions();
-}
-
-
+  
 
 @Post('refresh')
 @Public()
@@ -136,6 +120,19 @@ async refresh(@Req() req,
 
   return { ok: true };
 }
+
+
+@Get('sessions')
+@ApiOperation({ summary: "User session" })
+@ApiResponse({ status: 200, description: "User session returned" })
+@ApiResponse({ status: 401, description: "Invalid session." })
+@ApiResponse({ status: 404, description: "Unthorized session." })
+async getAllSession(
+  @Res({ passthrough: true }) res: Response
+) {
+  return this.loginService.getAllSessions();
+}
+
 
 @Get('session')
 @UseGuards(JwtAuthGuard)
@@ -231,8 +228,5 @@ async logout(@Req() req,@Res({passthrough:true}) res:Response){
 
   return {ok:true}
 }
-
-
-
 
 }

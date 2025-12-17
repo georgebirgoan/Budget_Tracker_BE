@@ -60,8 +60,10 @@ async function bootstrap() {
 
   // swagger http://localhost:3000/api
   SwaggerModule.setup('api', app, document);
+  
+  const port = Number(process.env.PORT) || 8000; 
 
-  await app.listen(8000,'0.0.0.0');
-  console.log('✅\n Server running on http://localhost:8000');
+  await app.listen(port,'0.0.0.0');
+  console.log(`\n------ Server running on port:${port}`);
 }
 bootstrap();
