@@ -50,7 +50,7 @@ export class UserAuthService{
             secure: mode == "PROD" ? true : false,
             sameSite: mode == "PROD" ? "none" :"lax",
             path: '/',
-            maxAge: 60 * 1000,
+            maxAge: 15 * 60 *  1000,
           });
     }
 
