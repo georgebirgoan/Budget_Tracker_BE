@@ -102,14 +102,22 @@ export class RegisterService {
 
       const hashPasw  = await bcrypt.hash(password,10);
 
-      return this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data:{
           fullName,
           email,
           password:hashPasw,
-          role:'ADMIN',
+          role:'USER',
+        },
+        select:{
+          fullName:true,
+          email:true,
         }
       })
+
+      return {
+          fullName:user.fullName
+      }
   }
 
 
