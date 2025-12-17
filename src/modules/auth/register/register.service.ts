@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from '../dto/register.dto.';
 import { PrismaService } from 'src/prisma/prisma.service';
 import bcrypt from 'bcrypt';
@@ -21,55 +21,101 @@ export class RegisterService {
   ) {}
 
 
-  async create(createUserDto: CreateUserDto) {
-    try {
-      const sessionId = createUserDto.sessionId;
-      console.log("sessionId din front pt register",sessionId);
 
-      const checkSessionId  = await  this.sessionService.getSession(sessionId);
+  //create user for reddis
+  // async create(createUserDto: CreateUserDto) {
+  //   try {
+  //     const sessionId = createUserDto.sessionId;
+  //     console.log("sessionId din front pt register",sessionId);
+  //     if(!sessionId){
+        
+  //     }
+  //     const checkSessionId  = await  this.sessionService.getSession(sessionId);
       
-      if(!checkSessionId || Object.keys(checkSessionId).length === 0){
-        throw new NotFoundException("Nu s-a gasit sesiune pentru userul dat!");
-      }
+  //     if(!checkSessionId || Object.keys(checkSessionId).length === 0){
+  //       throw new NotFoundException("Nu s-a gasit sesiune pentru userul dat!");
+  //     }
     
-      const existUser = await this.prisma.user.findUnique({
-        where:{email:createUserDto.email}
-      })
+  //     const existUser = await this.prisma.user.findUnique({
+  //       where:{email:createUserDto.email}
+  //     })
 
-      if(existUser) throw new BadRequestException("Email is already in use!");
+  //     if(existUser) throw new BadRequestException("Email is already in use!");
 
-      const saltRounds = 10;
-      const hashPass = await bcrypt.hash(createUserDto.password,saltRounds);
+  //     const saltRounds = 10;
+  //     const hashPass = await bcrypt.hash(createUserDto.password,saltRounds);
 
-      const savedUser = await this.prisma.user.create({
-        data: {
-          email: createUserDto.email,
-          password: hashPass,
-          fullName: createUserDto.fullName ?? 'defaultName',
-          role:Role.USER,
-          isActive:false
-        },
-      });
+  //     const savedUser = await this.prisma.user.create({
+  //       data: {
+  //         email: createUserDto.email,
+  //         password: hashPass,
+  //         fullName: createUserDto.fullName ?? 'defaultName',
+  //         role:Role.USER,
+  //         isActive:false
+  //       },
+  //     });
      
-  return {
-    message:"User created with succes!",
-    user: {
-      id: savedUser.id,
-      email: savedUser.email,
-      fullName: savedUser.fullName
-    },
-  };
+  // return {
+  //   message:"User created with succes!",
+  //   user: {
+  //     id: savedUser.id,
+  //     email: savedUser.email,
+  //     fullName: savedUser.fullName
+  //   },
+  // };
 
-    } catch (error) {
-      console.error(' User creation failed:', error);
-      throw error;
-    }
+  //   } catch (error) {
+  //     console.error(' User creation failed:', error);
+  //     throw error;
+  //   }
+  // }
+  // async findByEmail(email: string) {
+  //   return this.prisma.user.findUnique({
+  //     where: { email },
+  //   });
+  // }
+
+
+
+  //
+  async create(createUserDto:CreateUserDto){
+      const {fullName,email,password} = createUserDto;
+
+      const existUser = await this.prisma.user.findFirst({
+        where:{
+          OR:[
+            {fullName},
+            {email}
+          ]
+        }
+      });
+
+      if(existUser){
+          if(existUser.fullName === fullName){
+            throw new ConflictException("Exista deja un utilizator cu acest nume!")
+          }
+          if(existUser.email === email){
+                throw new ConflictException("Exista deja un utilizator cu acest email!")
+          }
+          throw new ConflictException("Utilizatorul exista deja!");
+      }
+
+      const hashPasw  = await bcrypt.hash(password,10);
+
+      return this.prisma.user.create({
+        data:{
+          fullName,
+          email,
+          password:hashPasw,
+          role:'ADMIN',
+        }
+      })
   }
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-    });
-  }
+
+
+
+
+
 
 
   async findById(id:number){
