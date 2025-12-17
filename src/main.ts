@@ -60,13 +60,12 @@ async function bootstrap() {
 
   // swagger http://localhost:3000/api
   SwaggerModule.setup('api', app, document);
-  console.log("BOOT: starting app...");
-  console.log("BOOT: PORT =", process.env.PORT);
   process.on("unhandledRejection", (e) => console.error("unhandledRejection", e));
   process.on("uncaughtException", (e) => console.error("uncaughtException", e));
 
   console.log('PORTT INAINTE ',Number(process.env.PORT) || 8000)
   const port = Number(process.env.PORT) || 8000; 
+
 
   await app.listen(port,'0.0.0.0');
   console.log(`\n------ Server running on port:${port}`);
