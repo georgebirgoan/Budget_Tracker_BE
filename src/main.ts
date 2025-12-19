@@ -21,7 +21,7 @@ async function bootstrap() {
     transform: true,
   }));
 
-   app.useGlobalFilters(new GlobalExceptionFilter());
+  //  app.useGlobalFilters(new GlobalExceptionFilter());
       // app.enableCors({
       //   origin: [
       //     "https://dasmar-fe.onrender.com"     // PROD FRONT eu
@@ -32,21 +32,28 @@ async function bootstrap() {
       // });
 
       app.enableCors({
-        origin: (origin, cb) => {
-          const allowed = [
-            "http://localhost:3000",
-            "https://dasmar-fe.onrender.com", 
+        origin: (origin, callback) => {
+          const allowedOrigins = [
+           'http://localhost:3000',
+            'https://dasmar-fe.onrender.com',
           ];
 
-        // Permite TOATE subdomeniile *.onrender.com ale frontendului
-        if (!origin || allowed.includes(origin) || /https:\/\/dasmar-fe.*\.onrender\.com$/.test(origin)) {
-          cb(null, true);
-        } else {
-          cb(new Error("CORS blocked: " + origin));
+          if (!origin) {
+            return callback(null, true);
+          }
+
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
         }
-      },
-      credentials: true,
-    });
+
+        if (/^https:\/\/.*dasmar-fe\.onrender\.com$/.test(origin)) {
+          return callback(null, true);
+        }
+
+        return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true, // Important for cookies, auth headers, etc.
+});
 
 
    const config = new DocumentBuilder()
@@ -60,8 +67,6 @@ async function bootstrap() {
 
   // swagger http://localhost:3000/api
   SwaggerModule.setup('api', app, document);
-  process.on("unhandledRejection", (e) => console.error("unhandledRejection", e));
-  process.on("uncaughtException", (e) => console.error("uncaughtException", e));
 
   console.log('PORTT INAINTE ',Number(process.env.PORT) || 8000)
   const port = Number(process.env.PORT) || 8000; 

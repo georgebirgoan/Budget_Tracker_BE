@@ -83,18 +83,18 @@ async refresh(@Req() req,
  @Res({ passthrough: true }) res: Response) 
  {
   const refreshToken = req.cookies?.refresh_token;
+  console.log("refresh token coookies:",refreshToken);
   if (!refreshToken) throw new UnauthorizedException('Nu exista refresh token!');
-  console.log("refreshhh",refreshToken);
 
  const  payload = await this.loginService.checkSignature(refreshToken)
   const userId = payload.sub;
   const sessionId = payload.sessionId;
 
-  console.log("user iD",userId);
-  console.log("sesionIdd",sessionId);
+  console.log("User payload din semnatura din refresh",userId);
+  console.log(" din paylaod refresh",sessionId);
 
   const session = await this.loginService.findSessionActive(sessionId,userId);
-  
+  console.log("sesiune functie gasut ceva:",session);
   if(!session){
     throw new UnauthorizedException("Sesiune invalidă! Vă rugăm logați-vă!")
   }
@@ -108,6 +108,8 @@ async refresh(@Req() req,
     {
       throw new UnauthorizedException('Nepotrivire de chei refresh!');
     } 
+
+
   const {newAccessToken,newRefreshToken} = await this.loginService.setNewTokens(session);
 
   const newHash = await bcrypt.hash(newRefreshToken, 10);
@@ -115,23 +117,23 @@ async refresh(@Req() req,
     where: { id: session.id },
     data: { refreshToken: newHash },
   });
-
+  
   await this.loginService.setInCookie(res,newAccessToken,newRefreshToken);
 
   return { ok: true };
 }
 
 
-@Get('sessions')
-@ApiOperation({ summary: "User session" })
-@ApiResponse({ status: 200, description: "User session returned" })
-@ApiResponse({ status: 401, description: "Invalid session." })
-@ApiResponse({ status: 404, description: "Unthorized session." })
-async getAllSession(
-  @Res({ passthrough: true }) res: Response
-) {
-  return this.loginService.getAllSessions();
-}
+// @Get('sessions')
+// @ApiOperation({ summary: "User session" })
+// @ApiResponse({ status: 200, description: "User session returned" })
+// @ApiResponse({ status: 401, description: "Invalid session." })
+// @ApiResponse({ status: 404, description: "Unthorized session." })
+// async getAllSession(
+//   @Res({ passthrough: true }) res: Response
+// ) {
+//   return this.loginService.getAllSessions();
+// }
 
 
 @Get('session')
@@ -142,23 +144,26 @@ async getCurrentSession(
 ) {
   const userId = req.user.id
   const sessionId = req.user.sessionId;
+
+  console.log("USERiD",userId);
+  console.log("IdssionUd",sessionId);
   if(!sessionId){
     throw new NotFoundException("Nu exista nici o seseiune validă pentru dvs!");
   }
-  console.log("sesssioId din cookie:",sessionId);
-  console.log("userId din cookie:",userId);
+
   const session = await this.loginService.getSessionUser(userId,sessionId);
+  console.log("sesiune in backend:",session);
+  
 
   return{
     user:{
       id:req.user.id,
       email:req.user.email,
       fullName:req.user.fullName,
-      role:req.user.role
+      role:req.user.role,
     },
     session
   }
-
 }
 
 //logout redis
@@ -168,7 +173,7 @@ async getCurrentSession(
 //   @Res({ passthrough: true }) res: Response
 // ) {
 //   try {
-//     const session = await this.userSessionService.revokeSession(sessionId);
+    // const session = await this.userSessionService.revokeSession(sessionId);
 
 //     res.clearCookie("access_token");
 //     res.clearCookie("refresh_token");
@@ -178,7 +183,7 @@ async getCurrentSession(
 //       throw new NotFoundException("Nu exista sesiune pentru userul dat!");
 //     }
 
-//     await this.userSessionService.updateDeconected(session.userId);
+    // await this.userSessionService.updateDeconected(session.userId);
 
 //     return { message: "Delogare cu success!" };
 //   } catch (error) {

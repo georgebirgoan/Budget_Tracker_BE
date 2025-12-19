@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException,Inject,UnauthorizedException} from "@nestjs/common";
+import { Injectable, NotFoundException,Inject,UnauthorizedException, InternalServerErrorException, ServiceUnavailableException} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service"
 import {Request,Response} from 'express';
 import { mode } from "src/utils/constants";
@@ -12,7 +12,7 @@ import { RegisterService } from "../register/register.service";
 import { CurrentUser } from 'src/modules/auth/types/current-user';
 import { Role } from "@prisma/client";
 import { ca } from "zod/v4/locales";
-
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class UserAuthService{
@@ -50,7 +50,7 @@ export class UserAuthService{
             secure: mode == "PROD" ? true : false,
             sameSite: mode == "PROD" ? "none" :"lax",
             path: '/',
-            maxAge: 15 * 60 *  1000,
+            maxAge: 15 * 60 * 1000, //15 min
           });
     }
 
@@ -61,11 +61,11 @@ export class UserAuthService{
                 sameSite: mode == "PROD" ? "none" :"lax" ,
                 path: '/',
                 maxAge: 30 * 24 * 60 * 60 * 1000, //7d
+                // maxAge: 60 * 1000, //7d
             });
         }
     
     async saveSessionId(res:Response,id:number){
-            console.log("mode save session:",mode);
             res.cookie('session_id', id, {
                 httpOnly: true,
                 secure: mode === "PROD" ? true : false,
@@ -190,7 +190,10 @@ async generateTokens(
         fullName: user.fullName ?? "",
         role: user.role
     };
-    
+
+    console.log("user iS IN TOKENN:",user.id);
+    console.log("sessssiuneeeeer iS IN TOKENN:",user.sessionId);
+    console.log("ACESSSSSSSS PAYLOAD iS IN TOKENN:",accesPayload);
     const accessToken = await this.jwtService.signAsync(accesPayload, {
         secret: this.jwtCfg.secret,
         expiresIn: this.jwtCfg.expiresIn as any,
@@ -222,19 +225,38 @@ async generateTokens(
 
 
     async validateUser(email: string, password: string) {
-        const user = await this.prisma.user.findUnique({
-        where:{email},
-        select:{
-            id:true,
-            email:true,
-            password:true,
-            fullName:true,
-            isActive:true,
-            role:true
-        }
+        let user;
+        try{
+            user = await this.prisma.user.findUnique({
+                where:{email},
+                select:{
+                    id:true,
+                    email:true,
+                    password:true,
+                    fullName:true,
+                    isActive:true,
+                    role:true,
+                    createdAt:true,
+                }
         });
-        console.log("user",user);
-        if (!user) throw new UnauthorizedException('Email sau parola gresite!');
+        }catch(err:any){
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new InternalServerErrorException('Eroare baza de date.Apelati administratorul!');
+                }
+
+                if (err instanceof Prisma.PrismaClientInitializationError) {
+                throw new ServiceUnavailableException('Nu pot conecta la baza de date.Apelati administratorul!');
+                }
+
+                if (err instanceof Prisma.PrismaClientRustPanicError) {
+                throw new ServiceUnavailableException('Baza de date indisponibila.Apelati administratorul!');
+                }
+
+                throw new InternalServerErrorException('Eroare interna.Apelati administratorul!');
+            }
+        
+            if (!user) throw new UnauthorizedException('Email sau parola gresite!');
+        
 
         // if(user.isActive === false){
         //     throw new ForbiddenException("Contul este dezactivat!")

@@ -13,6 +13,8 @@ import { REDIS } from 'src/redis/redis.module';
 import { SessionData } from '../types/sessionInterface';
 import { LoginUserDto } from '../dto/login.dto';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
+import {mode} from 'src/utils/constants'
+
 @Injectable()
 export class LoginService {
 
@@ -55,7 +57,6 @@ export class LoginService {
       });
       return payload;
     } catch(e:any) {
-      console.log('refresh eroare ',e?.name,e?.message)
       throw new UnauthorizedException('Invalid/expired refresh token');
     }
   }
@@ -86,22 +87,25 @@ async setNewTokens(session:SessionUserType){
 }
 
 
-async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
-    res.cookie('access_token', newAccessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge:15 * 60 * 1000
-  });
 
-  res.cookie('refresh_token', newRefreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/api/auth/refresh',
-    maxAge: 7 * 24  * 60 * 60 * 1000
-  });
+async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
+        res.cookie('access_token', newAccessToken, {
+            httpOnly: true,
+            secure: mode == "PROD" ? true : false,
+            sameSite: mode == "PROD" ? "none" :"lax",
+            path: '/',
+            maxAge: 15 * 60 *  1000, //15min
+          });
+    
+
+            res.cookie('refresh_token', newRefreshToken, {
+                httpOnly: true,
+                secure: mode == "PROD" ? true : false,
+                sameSite: mode == "PROD" ? "none" :"lax" ,
+                path: '/',
+                maxAge: 30 * 24 * 60 * 60 * 1000, //7d
+
+            });
 }
 
   async findSessionActive(sessionId:number,userId:number):Promise<SessionUserType | null>{
@@ -166,7 +170,8 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
     if(!accessToken || !refreshTokenHash){
       throw new UnauthorizedException("Access/Refresh token nu exista!");
     }
-
+    console.log("USER ID IN LOGINl:",user.id)
+    console.log("session ID IN LOGINl:",sessionId)
     await this.userAuthService.updateRefreshToken(sessionId,refreshTokenHash);
 
     await this.userAuthService.saveAccesToken(res,accessToken);
@@ -193,21 +198,21 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
   }
 
 
-async getAllSessions() {
-  const keys = await this.redis.keys("session:*");
+// async getAllSessions() {
+//   const keys = await this.redis.keys("session:*");
 
-  const sessions :SessionData[] =[];
+//   const sessions :SessionData[] =[];
 
-  for (const key of keys) {
-    const data = await this.redis.get(key);
-      console.log("data sessions",data);
-    if (data) {
-      sessions.push(JSON.parse(data));
-    }
-  }
+//   for (const key of keys) {
+//     const data = await this.redis.get(key);
+//       console.log("data sessions",data);
+//     if (data) {
+//       sessions.push(JSON.parse(data));
+//     }
+//   }
 
-  return sessions;
-}
+//   return sessions;
+// }
 
 
 
@@ -235,7 +240,6 @@ async getSessionUser(userId:number,sessionId:number){
         revoked:false,
         expiresAt:{gt:new Date()}
       },
-
       select:{
         id:true,
         userId:true,

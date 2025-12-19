@@ -45,7 +45,7 @@ async function main() {
     },
   });
 
-  console.log('Admin user creat cu succes! Prisma seed finalizat.');
+  // console.log('Admin user creat cu succes! Prisma seed finalizat.');
 }
 
 main()
