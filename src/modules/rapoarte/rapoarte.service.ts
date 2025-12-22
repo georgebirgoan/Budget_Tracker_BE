@@ -82,7 +82,7 @@ export class RapoarteService{
                         'Trasmesso ad ordini finalizati',
                         'Trecere la comenzi executate'
                     )
-                AND F1.data >= NOW() - INTERVAL '10 days'
+                AND F1.data >= NOW() - INTERVAL '12 days'
                 GROUP BY ora
                 ORDER BY ora DESC;
             `
@@ -107,7 +107,7 @@ export class RapoarteService{
             'Trasmesso ad ordini finalizati',
             'Trecere la comenzi executate'
             )
-            AND F1.data >= CURRENT_DATE - INTERVAL '10 days'   -- today + previous 4 = 5 days
+            AND F1.data >= CURRENT_DATE - INTERVAL '10 days' 
             AND F1.data <  CURRENT_DATE + INTERVAL '1 day'
             GROUP BY 1
             ORDER BY 1 DESC;
