@@ -10,6 +10,6 @@ export default {
   },
   
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DATABASE_URL_LOCAL"),
   },
 } satisfies PrismaConfig;

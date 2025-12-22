@@ -9,5 +9,4 @@ import { PlanService } from "./plan.service";
 export class PlanController {
   constructor(private planService:PlanService) {}
 
-
 }

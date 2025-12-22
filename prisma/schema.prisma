@@ -46,7 +46,55 @@ enum Role {
   ADMIN
 }
 
-model Test {
-  testId Int    @id @default(autoincrement())
-  name   String
+model oferte_2025 {
+  codunicoferta Int @id
+
+  creatin      Int    @unique
+  codintern    Int
+  creatde      String
+  idunicclient Int
+  idunicoferta Int
+
+  inregistratde    String
+  container        String
+  nume             String
+  nroferta         Int
+  datacreare       DateTime
+  datainregistrare DateTime
+  datamodificare   DateTime
+  datalivrare      DateTime
+  datamontaj       DateTime
+  totalsuprafata   Int?
+  totalferestreusi Int?
+  totalferestre    Int?
+  totalusi         Int?
+  totalusibalcon   Int?
+  totaltermopane   Int?
+  totalpaneluri    Int?
+  totalpret        Int?
+  culoare          String?
+
+  actiuni actiuni_2025_12[]
+
+  @@index([codintern])
+  @@index([creatde])
+  @@index([creatin])
+  @@index([idunicclient])
+  @@index([idunicoferta])
+}
+
+model actiuni_2025_12 {
+  nrinreg        Int      @id
+  codunicoferta  Int
+  username       String
+  data           DateTime
+  actiune        String
+  coduniccomanda Int
+  idunicoferta   Int
+  numefisier     String
+  obs            String
+
+  oferta oferte_2025 @relation(fields: [codunicoferta], references: [codunicoferta])
+
+  @@index([nrinreg])
 }

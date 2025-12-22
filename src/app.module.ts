@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionService } from './session/session.service';
+import { RapoarteModule } from './modules/rapoarte/rapoarte.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SessionService } from './session/session.service';
     AuthModule,
     UsersModule,
     RedisModule,
+    RapoarteModule
   ],
   controllers: [AppController],
   providers: [AppService,SessionService],
