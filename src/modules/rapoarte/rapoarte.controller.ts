@@ -1,7 +1,7 @@
-import { Controller } from "@nestjs/common";
+import { Body, Controller, ParseIntPipe } from "@nestjs/common";
 import { Get } from "@nestjs/common";
 import { RapoarteService } from "./rapoarte.service";
-
+import { Param } from "@nestjs/common";
 
 
 
@@ -34,6 +34,14 @@ export class RapoarteController{
    @Get('produs')
  async getProdus(){
     return this.rapoarteService.getProdus();
+ }
+
+  //detalii comenzi
+   @Get('finalizate/:codunicoferta/detalii')
+ async getDetaliiFinalizate(
+    @Param('codunicoferta',ParseIntPipe) codunicoferta: number
+ ){
+    return this.rapoarteService.getDetaliiFinalizate(codunicoferta);
  }
 
 

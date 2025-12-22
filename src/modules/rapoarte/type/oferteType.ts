@@ -30,3 +30,10 @@ export type produsType = {
     nrComenziFinalizate:number;
     suprafataProdus:number
 }
+
+export type detaliiFinalizate = {
+    username :string;
+    actiune:string;
+    numefisier:string;
+    data:Date
+}

@@ -1,6 +1,6 @@
 import { Injectable,Logger } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { comenziLucruType, productieType, produsType } from "./type/oferteType";
+import { comenziLucruType, detaliiFinalizate, productieType, produsType } from "./type/oferteType";
 import { Prisma } from "@prisma/client";
 
 @Injectable()
@@ -111,6 +111,26 @@ export class RapoarteService{
             AND F1.data <  CURRENT_DATE + INTERVAL '1 day'
             GROUP BY 1
             ORDER BY 1 DESC;
+
+    `
+    );
+    console.log("Nr coloane returnate produs  :",rows.length)
+    return rows;
+}
+
+ async getDetaliiFinalizate(codunicoferta:number):Promise<detaliiFinalizate[]>{
+
+    const rows =await this.prisma.$queryRaw<detaliiFinalizate[]>(
+    Prisma.sql`
+           SELECT
+    username,
+    data,
+    actiune,
+    codunicoferta,
+    numefisier
+            FROM winarhi.vw_actiuni_ultimele_12_luni
+            WHERE codunicoferta = ${codunicoferta}
+            ORDER BY data;
 
     `
     );
