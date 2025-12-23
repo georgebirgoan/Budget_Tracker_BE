@@ -10,6 +10,6 @@ export interface SessionData {
   deviceName: string | null;
   createdAt: string; 
   expiresAt: string;
-  deconectedAt:string;
+  deconectedAt:Date | null;
   role:Role
 }

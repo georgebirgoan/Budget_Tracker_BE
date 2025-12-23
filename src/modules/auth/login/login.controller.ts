@@ -145,14 +145,12 @@ async getCurrentSession(
   const userId = req.user.id
   const sessionId = req.user.sessionId;
 
-  console.log("USERiD",userId);
-  console.log("IdssionUd",sessionId);
   if(!sessionId){
     throw new NotFoundException("Nu exista nici o seseiune validă pentru dvs!");
   }
 
   const session = await this.loginService.getSessionUser(userId,sessionId);
-  console.log("sesiune in backend:",session);
+  const findLastDisconected = await this.loginService.getLastDeconectedAt(userId);
   
 
   return{
@@ -161,6 +159,7 @@ async getCurrentSession(
       email:req.user.email,
       fullName:req.user.fullName,
       role:req.user.role,
+      deconectedAt:findLastDisconected?.deconectedAt
     },
     session
   }
@@ -224,7 +223,8 @@ async logout(@Req() req,@Res({passthrough:true}) res:Response){
   await this.prisma.session.updateMany({
     where:{id:sessionId,userId},
     data:{
-      revoked:true
+      revoked:true,
+      deconectedAt:new Date()
     }
   })
 

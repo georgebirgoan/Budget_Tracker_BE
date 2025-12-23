@@ -26,7 +26,7 @@ export class RapoarteService{
         WHERE 
             (F1.actiune = 'Trasmesso ad ordini finalizati'
              OR F1.actiune = 'Trecere la comenzi executate')
-            AND F1.data >= CURRENT_DATE - INTERVAL '10 days'
+            AND F1.data >= CURRENT_DATE - INTERVAL '12 days'
             AND F1.data <  CURRENT_DATE + INTERVAL '1 day'
         ORDER BY F1.data DESC;
       `,
@@ -57,7 +57,7 @@ export class RapoarteService{
                     'Trecere în producție',
                     'Trecere înapoi în producție'
                 )
-            AND F1.data >= CURRENT_DATE - INTERVAL '10 days'
+            AND F1.data >= CURRENT_DATE - INTERVAL '12 days'
             AND F1.data <  CURRENT_DATE + INTERVAL '1 day'
             ORDER BY F1.data DESC;
         `

@@ -35,10 +35,11 @@ model Session {
   ip           String?
   deviceName   String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  expiresAt DateTime
-  revoked   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  expiresAt    DateTime
+  deconectedAt DateTime?
+  revoked      Boolean  @default(false)
 }
 
 enum Role {

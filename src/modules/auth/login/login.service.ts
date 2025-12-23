@@ -177,15 +177,7 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
     await this.userAuthService.saveAccesToken(res,accessToken);
     await this.userAuthService.saveRefreshToken(res,refreshToken);
 
-    //pt redis
-    // const userData = await this.redis.hGetAll(`userId:${user.id}`)
-    // if(!userData){
-    //   throw new NotFoundException("Nu exista utilizatorul in Redis!");
-    // }
-    // const lastDeconcted = userData?.deconectedAt ?? null;
-
-    // await this.userAuthService.saveSessionId(res,sessionId);
-    
+   
     return {
       message: 'Logare cu succes!',
       user: {
@@ -233,6 +225,8 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
 
 
 async getSessionUser(userId:number,sessionId:number){
+
+
     const session = await this.prisma.session.findFirst({
       where:{
         id:sessionId,
@@ -257,6 +251,20 @@ async getSessionUser(userId:number,sessionId:number){
       throw new UnauthorizedException("Nu exista sesiune valida pentru dvs!");
     }
 return session;
+}
+
+
+async getLastDeconectedAt(userId:any){
+ const lastDeconected= await this.prisma.session.findFirst({
+      where:{
+          userId,
+          deconectedAt:{
+            not:null
+          }
+    },
+    orderBy:{deconectedAt:'desc'}
+    })
+  return lastDeconected;
 }
 
 

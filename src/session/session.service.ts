@@ -24,9 +24,10 @@ export class SessionService {
     ip?:string
   }) {
 
-    // const sessionId = this.generateSessionId();
       
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+ 
+
     const session  = await this.prisma.session.create({
       data:{
         userId:sessionData.userId,
@@ -34,7 +35,8 @@ export class SessionService {
         userAgent:sessionData.userAgent,
         ip:sessionData.ip,
         expiresAt:expiresAt,
-        refreshToken:""
+        refreshToken:"",
+       
       }
     })
 

@@ -10,7 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionService } from './session/session.service';
-import { RapoarteModule } from './modules/rapoarte/rapoarte.module';
+import { RapoarteModule } from './modules/comenzi/rapoarte.module';
 
 @Module({
   imports: [
