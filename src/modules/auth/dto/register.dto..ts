@@ -7,9 +7,10 @@ export class CreateUserDto {
   @IsString({message:"Numele complet trebuie sa fie un sir de caractere!"})
   @MinLength(3, { message: 'Numele trebuie sa contina minim 3 caractere!' })
   @MaxLength(50, { message: 'Numele nu poate depasi 50 de caractere!' })
-  @Matches(/^[a-zA-ZăîâșțĂÎÂȘȚ\s]+$/, {
-    message: 'Numele poate contine doar litere si spatii!',
+  @Matches(/^[a-zA-ZăîâșțĂÎÂȘȚ' -]+$/, {
+    message: 'Numele poate contine doar litere, spatii, apostrof si cratime!',
   })
+
   @ApiProperty({
     example:"George Andreica",description:"User name"
   })
@@ -32,7 +33,6 @@ export class CreateUserDto {
 
 
   //validare parola register 8 carcatere,1Upp,1Low,1digit,1 special,max 128
-
   @IsNotEmpty({ message: 'Parola este obligatorie!' })
   @IsString({ message: 'Parola trebuie sa fie un sir de caractere!' })
   @MinLength(8, { message: 'Parola trebuie sa contina minim 8 caractere!' })
@@ -54,9 +54,4 @@ export class CreateUserDto {
     description: "Parola puternica a utilizatorului"
   })
   password: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Type(()=>Number)
-  sessionId: number;
 }

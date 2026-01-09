@@ -70,8 +70,8 @@ export class LoginController {
   @Req() req:Request,
   @Res({ passthrough: true }) res: Response
 ) {
-  const result = await this.loginService.login(data,res,req);
-  return result;
+    const result = await this.loginService.login(data,res,req);
+    return result;
   }
 
 

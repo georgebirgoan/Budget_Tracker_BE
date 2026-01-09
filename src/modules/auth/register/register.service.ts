@@ -80,7 +80,9 @@ export class RegisterService {
   //
   async create(createUserDto:CreateUserDto){
       const {fullName,email,password} = createUserDto;
-
+      console.log("fullname:",fullName)
+      console.log("email:",email)
+      console.log("passwprd:",password)
       const existUser = await this.prisma.user.findFirst({
         where:{
           OR:[

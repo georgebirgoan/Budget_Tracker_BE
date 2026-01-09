@@ -11,15 +11,17 @@ async function bootstrap() {
   });
   
   console.log('🚀 NestJS backend starting...');
-  (app as any).set('trust proxy', 1);
+  // (app as any).set('trust proxy', 1);
 
   app.use(cookieParser());
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted:true,
-    transform: true,
-  }));
+  // app.useGlobalPipes(new ValidationPipe({
+  //   whitelist: true,
+  //   forbidNonWhitelisted:true,
+  //   transform: true,
+  //   stopAtFirstError:true,
+  //   forbidUnknownValues:false
+  // }));
 
   //  app.useGlobalFilters(new GlobalExceptionFilter());
       // app.enableCors({
@@ -34,9 +36,8 @@ async function bootstrap() {
       app.enableCors({
         origin: (origin, callback) => {
           const allowedOrigins = [
-           'http://localhost:3000',
+           'http://localhost:8081',
             'https://dasmar-fe.onrender.com',
-            'http://192.168.1.133:3000',
           ];
 
           if (!origin) {
@@ -53,7 +54,7 @@ async function bootstrap() {
 
         return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true, // Important for cookies, auth headers, etc.
+  credentials: true,
 });
 
 
@@ -66,9 +67,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  // swagger http://localhost:3000/api
   SwaggerModule.setup('api', app, document);
-
   console.log('PORTT INAINTE ',Number(process.env.PORT) || 8000)
   const port = Number(process.env.PORT) || 8000; 
 

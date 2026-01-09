@@ -28,8 +28,24 @@ export class RegisterController {
   @ApiOperation({summary:"User register"})
   @ApiResponse({status:200,description:"User succes register"})
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
   create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+    try{
+      console.log("data from front:",createUserDto);
+      return this.userService.create(createUserDto);
+
+    }
+    catch(err:any){
+      console.log("register fails",err?.response?.data);
+      throw err;
+    }
+  }
+
+  
+
+  @Get('test')
+  getTest(){
+    return 'this is a test'
   }
 
   @Get('getUser/:id')

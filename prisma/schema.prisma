@@ -35,67 +35,25 @@ model Session {
   ip           String?
   deviceName   String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   expiresAt    DateTime
   deconectedAt DateTime?
-  revoked      Boolean  @default(false)
+  revoked      Boolean   @default(false)
+}
+
+model Transaction {
+  transactionId Int     @id @default(autoincrement())
+  amount        Int
+  categoryId    String?
+  date          String
+  description   String
+  repeat        String
+  title         String
+  type          String
 }
 
 enum Role {
   USER
   ADMIN
-}
-
-model oferte_2025 {
-  codunicoferta Int @id
-
-  creatin      Int    @unique
-  codintern    Int
-  creatde      String
-  idunicclient Int
-  idunicoferta Int
-
-  inregistratde    String
-  container        String
-  nume             String
-  nroferta         Int
-  datacreare       DateTime
-  datainregistrare DateTime
-  datamodificare   DateTime
-  datalivrare      DateTime
-  datamontaj       DateTime
-  totalsuprafata   Int?
-  totalferestreusi Int?
-  totalferestre    Int?
-  totalusi         Int?
-  totalusibalcon   Int?
-  totaltermopane   Int?
-  totalpaneluri    Int?
-  totalpret        Int?
-  culoare          String?
-
-  actiuni actiuni_2025_12[]
-
-  @@index([codintern])
-  @@index([creatde])
-  @@index([creatin])
-  @@index([idunicclient])
-  @@index([idunicoferta])
-}
-
-model actiuni_2025_12 {
-  nrinreg        Int      @id
-  codunicoferta  Int
-  username       String
-  data           DateTime
-  actiune        String
-  coduniccomanda Int
-  idunicoferta   Int
-  numefisier     String
-  obs            String
-
-  oferta oferte_2025 @relation(fields: [codunicoferta], references: [codunicoferta])
-
-  @@index([nrinreg])
 }
