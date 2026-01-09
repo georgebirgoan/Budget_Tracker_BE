@@ -1,4 +1,4 @@
-import { Body, Controller, ParseIntPipe, Post } from "@nestjs/common";
+import { Body, Controller, Delete, ParseIntPipe, Patch, Post } from "@nestjs/common";
 import { Get } from "@nestjs/common";
 import { RapoarteService } from "./rapoarte.service";
 import { Param } from "@nestjs/common";
@@ -25,5 +25,16 @@ export class RapoarteController{
    return this.rapoarteService.getTransactions();
  }
 
+ @Delete(":id")
+ async deleteTransaction(
+  @Param("id",ParseIntPipe) id:number
+ ){
+    return this.rapoarteService.deleteTransaction(id);
+ }
+
+ @Patch(":id")
+updateTransaction(@Param("id", ParseIntPipe) id: number, @Body() dto: TransactionDto) {
+  return this.rapoarteService.updateTransaction(id, dto);
+}
 
 }

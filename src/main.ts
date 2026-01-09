@@ -38,6 +38,7 @@ async function bootstrap() {
           const allowedOrigins = [
            'http://localhost:8081',
             'https://dasmar-fe.onrender.com',
+            'http://172.20.10.9:8081',
           ];
 
           if (!origin) {
