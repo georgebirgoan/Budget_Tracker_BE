@@ -53,6 +53,16 @@ model Transaction {
   type          String
 }
 
+model Priorities {
+  idPriorities Int       @id @default(autoincrement())
+  name         String
+  amount       Int
+  category     String
+  note         String?
+  date         String
+  createdAt    DateTime? @default(now())
+}
+
 enum Role {
   USER
   ADMIN

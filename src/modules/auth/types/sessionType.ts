@@ -1,5 +1,4 @@
 import { Role } from '@prisma/client';
-import { email } from 'zod';
 
 
 export type SessionUserType={

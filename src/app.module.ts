@@ -8,9 +8,8 @@ import { ConfigModule } from '@nestjs/config';
 import jwtConfig from './modules/auth/common/config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
-import { RedisModule } from './redis/redis.module';
-import { SessionService } from './session/session.service';
 import { RapoarteModule } from './modules/transaction/rapoarte.module';
+import { PlanModule } from './modules/plan/plan.module';
 
 @Module({
   imports: [
@@ -23,10 +22,10 @@ import { RapoarteModule } from './modules/transaction/rapoarte.module';
     PropertyModule,
     AuthModule,
     UsersModule,
-    RedisModule,
-    RapoarteModule
+    RapoarteModule,
+    PlanModule
   ],
   controllers: [AppController],
-  providers: [AppService,SessionService],
+  providers: [AppService],
 })
 export class AppModule {}

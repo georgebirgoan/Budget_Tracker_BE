@@ -8,12 +8,11 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Request, Response } from 'express'
 import { UserAuthService } from '../utils/user-service';
-import { SessionService } from 'src/session/session.service';
-import { REDIS } from 'src/redis/redis.module';
 import { SessionData } from '../types/sessionInterface';
 import { LoginUserDto } from '../dto/login.dto';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import {mode} from 'src/utils/constants'
+import { SessionService } from 'src/session/session.service';
 
 @Injectable()
 export class LoginService {
@@ -32,9 +31,7 @@ export class LoginService {
     private prisma:PrismaService,
     private userAuthService:UserAuthService,
     private sessionService:SessionService,
-    dto:LoginUserDto,
     private readonly jwtService: JwtService,
-    @Inject(REDIS) private readonly redis,
   @Inject(jwtConfig.KEY)
     private readonly jwtCfg: ConfigType<typeof jwtConfig>,
     

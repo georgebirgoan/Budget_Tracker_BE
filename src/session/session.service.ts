@@ -1,21 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { REDIS } from '../redis/redis.module';
-import { SessionData } from 'src/modules/auth/types/sessionInterface';
-import { Role, Session } from '@prisma/client';
-import { randomBytes } from 'crypto';
-import { tr } from 'zod/v4/locales';
+import {  Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SessionService {
-  constructor(@Inject(REDIS) private readonly redis,
+  constructor(
         private prisma:PrismaService,
     
 ) {}
 
 
   
- 
 
   async createSession(sessionData: {
     userId:number,
@@ -44,24 +38,25 @@ export class SessionService {
     
   return sessionId;
 
-
-  //pt rediss
-    // await this.redis.set(
-    //   `session:${sessionId}`,
-    //   JSON.stringify(payload),
-    //   { EX: 60 * 60 * 24 * 7 } // pe 7 zile
-    // );
-
   }
+}
+  // pt rediss
+  //   await this.redis.set(
+  //     `session:${sessionId}`,
+  //     JSON.stringify(payload),
+  //     { EX: 60 * 60 * 24 * 7 } // pe 7 zile
+  //   );
 
-  async getSession(sessionId: number) {
-    const data = await this.redis.get(`session:${sessionId}`);
-    return data ? JSON.parse(data) : null;
-  }
+  // }
 
-  async deleteSession(sessionId: number) {
-    await this.redis.del(`session:${sessionId}`);
-  }
+  // async getSession(sessionId: number) {
+  //   const data = await this.redis.get(`session:${sessionId}`);
+  //   return data ? JSON.parse(data) : null;
+  // }
+
+  // async deleteSession(sessionId: number) {
+  //   await this.redis.del(`session:${sessionId}`);
+  // }
 
   // async getSessionDB(sessionId:number){
   //   try{
@@ -72,5 +67,5 @@ export class SessionService {
   // }
 
   
-}
+// }
 

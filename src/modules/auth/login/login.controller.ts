@@ -27,7 +27,6 @@ import jwtConfig from '../common/config/jwt.config';
 import { UserSessionService } from '../utils/session-service';
 import { LoginUserDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth/jwt-auth.guard';
-import { tr } from 'zod/v4/locales';
 import bcrypt from 'bcrypt';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 
@@ -62,20 +61,15 @@ export class LoginController {
 
   // @UseGuards(LocalAuthGuard)
   @Post('login')
-    @ApiOperation({summary:"User login"})
-    @ApiResponse({status:200,description:"User succes login"})
-    @ApiResponse({ status: 401, description: 'Parola gresita!.' })
    async login(
-  @Body() data:LoginUserDto,
-  @Req() req:Request,
-  @Res({ passthrough: true }) res: Response
+      @Body() data:LoginUserDto,
+      @Req() req:Request,
+      @Res({ passthrough: true }) res: Response
 ) {
     const result = await this.loginService.login(data,res,req);
     return result;
   }
 
-
-  
 
 @Post('refresh')
 @Public()

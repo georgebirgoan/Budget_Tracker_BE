@@ -15,6 +15,7 @@ import { UserAuthService } from './utils/user-service';
 import { UserSessionService } from './utils/session-service';
 import { SessionModule } from 'src/session/session.module';
 import { LoginUserDto } from './dto/login.dto';
+import { SessionService } from 'src/session/session.service';
 
 
 @Module({
@@ -40,6 +41,7 @@ import { LoginUserDto } from './dto/login.dto';
     RefreshJwtStrategy,
     LocalStrategy,
     UserAuthService,
+    SessionService,
     UserSessionService,
     LoginUserDto
   ],

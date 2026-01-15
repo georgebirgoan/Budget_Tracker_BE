@@ -11,7 +11,6 @@ import { AuthJwtPayload } from "../types/auth-jwtPayload";
 import { RegisterService } from "../register/register.service";
 import { CurrentUser } from 'src/modules/auth/types/current-user';
 import { Role } from "@prisma/client";
-import { ca } from "zod/v4/locales";
 import { Prisma } from "@prisma/client";
 
 @Injectable()

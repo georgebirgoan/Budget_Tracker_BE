@@ -2,7 +2,6 @@ import { Injectable,Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { TransactionDto } from "./dto/transaction.dto";
-import { da } from "zod/v4/locales";
 
 @Injectable()
 export class RapoarteService{

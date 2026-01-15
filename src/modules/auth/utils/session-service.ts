@@ -5,14 +5,12 @@ import jwtConfig from '../common/config/jwt.config';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { REDIS, RedisModule } from "src/redis/redis.module";
 
 @Injectable()
 export class UserSessionService{
     constructor(
         private prisma:PrismaService,
         private readonly jwtService: JwtService,
-        @Inject(REDIS) private readonly redis,
         @Inject(jwtConfig.KEY)
         private readonly jwtCfg: ConfigType<typeof jwtConfig>,
 
@@ -110,25 +108,25 @@ export class UserSessionService{
 
 
 
-   async revokeSession(sessionId: string) {
-        const raw = await this.redis.get(`session:${sessionId}`);
-        if (!raw) return null;
+//    async revokeSession(sessionId: string) {
+//         const raw = await this.redis.get(`session:${sessionId}`);
+//         if (!raw) return null;
 
-        const session = JSON.parse(raw);
-
-
-        return session; 
-}
+//         const session = JSON.parse(raw);
 
 
-async updateDeconected(userId:string){
-   try{
-    if(!userId){
-        throw new NotFoundException("Nu sa gasit user Id");
-    }
-       await this.redis.hSet(`userId:${userId}`, "deconectedAt", new Date().toISOString());
-   }catch(err){
-        throw new NotFoundException("Eroare UPDATE deconected! ",err);
-   }
-}
+//         return session; 
+// }
+
+
+// async updateDeconected(userId:string){
+//    try{
+//     if(!userId){
+//         throw new NotFoundException("Nu sa gasit user Id");
+//     }
+//        await this.redis.hSet(`userId:${userId}`, "deconectedAt", new Date().toISOString());
+//    }catch(err){
+//         throw new NotFoundException("Eroare UPDATE deconected! ",err);
+//    }
+// }
 }
