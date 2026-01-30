@@ -6,14 +6,14 @@ import jwtConfig from '../common/config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Request, Response } from 'express'
 import { UserAuthService } from '../utils/user-service';
 import { SessionData } from '../types/sessionInterface';
 import { LoginUserDto } from '../dto/login.dto';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 import {mode} from 'src/utils/constants'
 import { SessionService } from 'src/session/session.service';
-
+import { Request,Response } from 'express';
+import { AuthUser } from './type/login.type';
 @Injectable()
 export class LoginService {
 
@@ -124,14 +124,8 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
         return session;
   }
 
-  async login(dto:LoginUserDto, res: Response,req:Request) {
-    if(!dto.email || !dto.password){
-      throw new NotFoundException("Email-ul sau parola nu exista!");
-    }
-    const user  = await this.userAuthService.validateUser(dto.email,dto.password)
-    if(!user){
-      throw new NotFoundException("Utilizatorul curent nu exista!");
-    }
+  async login(user:AuthUser,req:Request,res:Response) {
+   
 
     const ip =
     req.headers['x-forwarded-for']?.toString() ||

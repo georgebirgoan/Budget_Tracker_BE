@@ -31,6 +31,8 @@ import bcrypt from 'bcrypt';
 import refreshJwtConfig from '../common/config/refresh-jwt.config';
 
 
+// @Public there is no need for jwt becuase first is not exist
+//localAuthGuard-valida fields-->call LocalStrategy 
 @Controller('auth')
 export class LoginController {
   constructor(
@@ -47,26 +49,28 @@ export class LoginController {
      
   ) {}
 
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(LocalAuthGuard)
-
 
   
   @Get('public')
+  @Public()
   async getPublic() {
     return { message: 'Public route' };
   }
 
+  @Get('private')
+  async getPrivate() {
+    return { message: 'Private route' };
+  }
 
-  // @UseGuards(LocalAuthGuard)
+  @Public()
+  @UseGuards(LocalAuthGuard)
   @Post('login')
    async login(
-      @Body() data:LoginUserDto,
+      @Body() _:LoginUserDto,
       @Req() req:Request,
-      @Res({ passthrough: true }) res: Response
+      @Res({ passthrough: true }) res: Response,
 ) {
-    const result = await this.loginService.login(data,res,req);
+    const result = await this.loginService.login(req.user,req,res);
     return result;
   }
 

@@ -1,9 +1,10 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { GlobalExceptionFilter } from './modules/auth/helper/error-function';
+import { JwtAuthGuard } from './modules/auth/common/guards/jwt-auth/jwt-auth.guard';
 
 
 async function bootstrap() {
@@ -11,34 +12,21 @@ async function bootstrap() {
   });
   
   console.log('🚀 NestJS backend starting...');
-  // (app as any).set('trust proxy', 1);
-
   app.use(cookieParser());
+ 
 
-  // app.useGlobalPipes(new ValidationPipe({
-  //   whitelist: true,
-  //   forbidNonWhitelisted:true,
-  //   transform: true,
-  //   stopAtFirstError:true,
-  //   forbidUnknownValues:false
-  // }));
-
-  //  app.useGlobalFilters(new GlobalExceptionFilter());
-      // app.enableCors({
-      //   origin: [
-      //     "https://dasmar-fe.onrender.com"     // PROD FRONT eu
-      //   ],
-      //   methods: "GET,POST,PATCH,DELETE,OPTIONS",
-      //   credentials: true,
-      //   allowedHeaders: "Content-Type, Authorization",
-      // });
+  //validare GLOBALA DTO
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist:true,
+    forbidNonWhitelisted:true
+  }))
 
       app.enableCors({
         origin: (origin, callback) => {
           const allowedOrigins = [
            'http://localhost:8081',
             'https://dasmar-fe.onrender.com',
-            'http://172.20.10.9:8081',
+            'http://192.168.1.131:8081',
           ];
 
           if (!origin) {
@@ -67,8 +55,9 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-
   SwaggerModule.setup('api', app, document);
+  
+  
   console.log('PORTT INAINTE ',Number(process.env.PORT) || 8000)
   const port = Number(process.env.PORT) || 8000; 
 

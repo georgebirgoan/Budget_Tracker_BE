@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException,Inject,UnauthorizedException, InternalServerErrorException, ServiceUnavailableException} from "@nestjs/common";
+import { Injectable, NotFoundException,Inject,UnauthorizedException, InternalServerErrorException, ServiceUnavailableException, ForbiddenException} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service"
 import {Request,Response} from 'express';
 import { mode } from "src/utils/constants";
@@ -12,6 +12,7 @@ import { RegisterService } from "../register/register.service";
 import { CurrentUser } from 'src/modules/auth/types/current-user';
 import { Role } from "@prisma/client";
 import { Prisma } from "@prisma/client";
+import { AuthUser } from "../login/type/login.type";
 
 @Injectable()
 export class UserAuthService{
@@ -189,10 +190,7 @@ async generateTokens(
         fullName: user.fullName ?? "",
         role: user.role
     };
-
-    console.log("user iS IN TOKENN:",user.id);
-    console.log("sessssiuneeeeer iS IN TOKENN:",user.sessionId);
-    console.log("ACESSSSSSSS PAYLOAD iS IN TOKENN:",accesPayload);
+    //set as Bearer
     const accessToken = await this.jwtService.signAsync(accesPayload, {
         secret: this.jwtCfg.secret,
         expiresIn: this.jwtCfg.expiresIn as any,
@@ -223,7 +221,7 @@ async generateTokens(
 
 
 
-    async validateUser(email: string, password: string) {
+async validateUser(email: string, password: string):Promise<AuthUser> {
         let user;
         try{
             user = await this.prisma.user.findUnique({
@@ -255,18 +253,17 @@ async generateTokens(
             }
         
             if (!user) throw new UnauthorizedException('Email sau parola gresite!');
-        
+            
+            // if(!user.isActive){
+            //     throw new ForbiddenException("Contul este dezactivat!");
+            // }
 
-        // if(user.isActive === false){
-        //     throw new ForbiddenException("Contul este dezactivat!")
-        // }
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) throw new UnauthorizedException('Email sau parola gresita!');
+            
+            const { password: _, ...userFaraParola } = user;
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) throw new UnauthorizedException('Email sau parola gresita!');
-        
-        const { password: _, ...userFaraParola } = user;
-
-        return userFaraParola;
+            return userFaraParola;
 }
 
 async updateRefreshToken(sessionId:number,refreshToken:string){

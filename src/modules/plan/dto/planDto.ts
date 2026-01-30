@@ -1,21 +1,27 @@
-import { IsInt, IsNumber, IsString } from "class-validator";
+// dto/add-priority.dto.ts
+import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
+export class AddPriorityDto {
+  @IsString()
+  @IsNotEmpty()
+  monthKey: string;
 
-export class validatePlanDto{
-    @IsString({message:"Campul trebuie sa fie de tip string!"})
-    name:string;
+  @IsString()
+  @IsNotEmpty()
+  category: string;
 
-    @IsNumber({},{message:"Campul trebuie sa fie o suma valida!"})
-    amount :number;
-    
-    @IsString({message:"Campul category sa fie o valoare de tip string!"})
-    category :string;
-    
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsString({message:"Campul note sa fie o valoare de tip string!"})
-    note :string;
-    
-    @IsString({message:"Campul date sa fie o valoare de tip string!"})
-    date :string;
+  @IsNumber()
+  @Min(0)
+  amount: number;
 
+  @IsDateString()
+  date: string;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
 }

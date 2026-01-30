@@ -12,9 +12,9 @@ import { RegisterService } from './register.service';
 import { CreateUserDto } from '../dto/register.dto.';
 import { JwtAuthGuard } from 'src/modules/auth/common/guards/jwt-auth/jwt-auth.guard';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from '../common/decorators/public.decorator';
 
 
-@ApiTags('auth')
 @Controller('auth')
 export class RegisterController {
   constructor(private readonly userService: RegisterService) {}
@@ -22,6 +22,7 @@ export class RegisterController {
  
 
   @Post('register')
+  @Public()
   create(@Body() createUserDto: CreateUserDto) {
     try{
       console.log("data from front:",createUserDto);
@@ -33,6 +34,7 @@ export class RegisterController {
       throw err;
     }
   }
+  
 
   @Get('getUser/:id')
   getUserByIdTest(@Param('id') id:string ){

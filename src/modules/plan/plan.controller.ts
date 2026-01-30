@@ -1,7 +1,6 @@
-import { Body, Controller, Get,Post } from "@nestjs/common";
+import { AddPriorityDto } from './dto/planDto';
+import { Body, Controller, Get,Param,Post } from "@nestjs/common";
 import { PlanService } from "./plan.service";
-import { validatePlanDto } from "./dto/planDto";
-
 
 @Controller('plan')
 export class PlanController {
@@ -10,15 +9,24 @@ export class PlanController {
 
   @Post('addPriorities')
   async postPriorities (
-    @Body() val:validatePlanDto
+    @Body() val:AddPriorityDto
   ){
     return this.planService.postPriorities(val)
   }
 
-  @Get("getPriorities")
-  async getPriorities(){
-    return this.planService.getProritati();
-  }
+  @Get('getGroupParam/:monthKey')
+    getPlan(@Param('monthKey') monthKey: string) {
+      return this.planService.getProritatiGroup(monthKey);
+    }
+
+    @Get('priorities/:monthKey/recent')
+    getRecent(
+      @Param('monthKey') monthKey: string,
+    ) {
+      return this.planService.getRecentItems(
+        monthKey,
+      );
+    }
 
   
 

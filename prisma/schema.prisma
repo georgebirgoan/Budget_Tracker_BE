@@ -53,15 +53,41 @@ model Transaction {
   type          String
 }
 
-model Priorities {
-  idPriorities Int       @id @default(autoincrement())
-  name         String
-  amount       Int
-  category     String
-  note         String?
-  date         String
-  createdAt    DateTime? @default(now())
+
+
+model PlanGroup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  monthKey  String  
+  order     Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items     PlanItem[]
+
+  @@index([monthKey])
+  @@unique([monthKey, name])
 }
+
+model PlanItem {
+  id        Int      @id @default(autoincrement())
+  name      String
+  amount    Decimal  @db.Decimal(12, 2) 
+  note      String?
+  date      DateTime 
+  order     Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  groupId   Int
+  group     PlanGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([date])
+}
+
 
 enum Role {
   USER
