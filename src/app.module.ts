@@ -28,9 +28,10 @@ import { APP_GUARD } from '@nestjs/core';
     PlanModule
   ],
   controllers: [AppController],
-  providers: [AppService,{
-    provide:APP_GUARD,
-    useClass:JwtAuthGuard
-  }],
+  providers:[AppService]
+  // providers: [AppService,{
+  //   provide:APP_GUARD,
+  //   useClass:JwtAuthGuard
+  // }],
 })
 export class AppModule {}
