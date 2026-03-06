@@ -1,10 +1,11 @@
 import { AddPriorityDto } from './dto/planDto';
-import { Body, Controller, Delete, Get,Param,ParseIntPipe,Patch,Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get,Param,ParseIntPipe,Patch,Post, Put, Query } from "@nestjs/common";
 import { PlanService } from "./plan.service";
 import { AddGroupDto } from './dto/group.Dto';
 import { AddPriorityInGroupDto } from './dto/priorityInGroupDto';
 import { UpdateGroupDto } from './dto/updateGroupDto';
 import { ReorderGroupsDto } from './dto/reorderDto';
+import { UpdateItemDto } from './dto/itemUpdateDelete';
 
 @Controller('plan')
 export class PlanController {
@@ -31,13 +32,13 @@ export class PlanController {
     }
 
 
-@Post('addPriorityInGroup')
-  async addNewPriorityInGroup (
-          @Body() dto:AddPriorityInGroupDto
-        ){
-          console.log("ajunge in backend")
-            return this.planService.addNewPriority(dto);
-        }
+  @Post('addPriorityInGroup')
+    async addNewPriorityInGroup (
+            @Body() dto:AddPriorityInGroupDto
+          ){
+            console.log("ajunge in backend")
+              return this.planService.addNewPriority(dto);
+          }
 
 @Delete("deleteGroup/:id")
   deleteGroup(@Param("id", ParseIntPipe) id: number) {
@@ -54,6 +55,16 @@ export class PlanController {
       return this.planService.getProritatiGroup(monthKey);
     }
 
+  @Get('getRange/range')
+  getPlanByRange(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    console.log("startdate:",startDate);
+    console.log("endDate:",endDate);
+    return this.planService.getPrioritatiGroupByRange(startDate, endDate);
+  }
+
     //get
     @Get('priorities/getItems')
     getRecent(
@@ -63,6 +74,21 @@ export class PlanController {
         monthKey,
       );
     }
+
+
+// items update delete
+      @Put('itemsUpdate/:id')
+      updateItem(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: UpdateItemDto,
+      ) {
+        return this.planService.updateItem(id, dto);
+      }
+
+      @Delete('itemsDelete/:id')
+      deleteItem(@Param('id', ParseIntPipe) id: number) {
+        return this.planService.deleteItem(id);
+      }
 
   
 

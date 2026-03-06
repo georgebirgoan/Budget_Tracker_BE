@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+connectionString: process.env.DATABASE_URL,
   tls: {
     rejectUnauthorized: false,
   },

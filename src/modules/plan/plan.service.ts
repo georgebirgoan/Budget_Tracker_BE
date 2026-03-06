@@ -6,10 +6,43 @@ import { AddPriorityInGroupDto } from "./dto/priorityInGroupDto";
 import { Prisma } from "@prisma/client";
 import { UpdateGroupDto } from "./dto/updateGroupDto";
 import { ReorderGroupsDto } from "./dto/reorderDto";
+import { UpdateItemDto } from "./dto/itemUpdateDelete";
+
+
+
+function parseDateOnlyLocalStart(dateOnly: string) {
+  // dateOnly: "2026-02-01"
+  const [y, m, d] = dateOnly.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 0, 0, 0, 0); // local time
+  return dt;
+}
+function monthKeysBetween(startISO: string, endISO: string) {
+  const [sy, sm] = startISO.slice(0, 7).split("-").map(Number);
+  const [ey, em] = endISO.slice(0, 7).split("-").map(Number);
+
+  const out: string[] = [];
+  let y = sy;
+  let m = sm;
+
+  while (y < ey || (y === ey && m <= em)) {
+    out.push(`${y}-${String(m).padStart(2, "0")}`);
+    m++;
+    if (m === 13) {
+      m = 1;
+      y++;
+    }
+  }
+  return out;
+}
+
+function parseDateOnlyLocalEnd(dateOnly: string) {
+  const [y, m, d] = dateOnly.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 23, 59, 59, 999); // local time
+  return dt;
+}
 
 
 @Injectable()
-
 export class PlanService{
     constructor(private prisma:PrismaService){}
 
@@ -121,31 +154,31 @@ async postPriorities(dto: AddPriorityDto) {
       },
     });
   }
-  
-async updateGroup(dto: UpdateGroupDto) {
-    const groupId = dto.groupId;
-    const name = dto.name.trim();
 
-    if (!name) throw new BadRequestException("name is required");
+  async updateGroup(dto: UpdateGroupDto) {
+      const groupId = dto.groupId;
+      const name = dto.name.trim();
 
-    const exists = await this.prisma.planGroup.findUnique({
-      where: { id: groupId },
-      select: { id: true },
-    });
+      if (!name) throw new BadRequestException("name is required");
 
-    if (!exists) throw new NotFoundException("Group not found");
+      const exists = await this.prisma.planGroup.findUnique({
+        where: { id: groupId },
+        select: { id: true },
+      });
 
-    return this.prisma.planGroup.update({
-      where: { id: groupId },
-      data: { name }, 
-    });
+      if (!exists) throw new NotFoundException("Group not found");
+
+      return this.prisma.planGroup.update({
+        where: { id: groupId },
+        data: { name }, 
+      });
+    }
+  async deleteGroup(id: number) {
+    return this.prisma.planGroup.delete({ where: { id } });
   }
-async deleteGroup(id: number) {
-  return this.prisma.planGroup.delete({ where: { id } });
-}
 
 
-    async getProritatiGroup(monthKey:string){
+  async getProritatiGroup(monthKey:string){
       const groups = await this.prisma.planGroup.findMany({
         where: { monthKey },
         orderBy: { order: 'asc' },
@@ -158,7 +191,45 @@ async deleteGroup(id: number) {
 
       return { monthKey, groups };
     }
-    
+
+  async getPrioritatiGroupByRange(
+    startDate: string,
+    endDate: string,
+    hideEmpty = false,
+  ) {
+    if (!startDate || !endDate) {
+      throw new BadRequestException("startDate and endDate are required");
+    }
+
+    const start = parseDateOnlyLocalStart(startDate);
+    const end = parseDateOnlyLocalEnd(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException("Invalid date format. Use YYYY-MM-DD");
+    }
+
+    const monthKeys = monthKeysBetween(startDate, endDate);
+
+    const groups = await this.prisma.planGroup.findMany({
+      where: {
+        monthKey: { in: monthKeys },
+
+        ...(hideEmpty
+          ? { items: { some: { date: { gte: start, lte: end } } } }
+          : {}),
+      },
+      orderBy: [{ monthKey: "asc" }, { order: "asc" }],
+      include: {
+        items: {
+          where: { date: { gte: start, lte: end } },
+          orderBy: [{ order: "asc" }, { date: "desc" }],
+        },
+      },
+    });
+
+    return { monthKey: "range", groups };
+  }
+      
     async getRecentItems(monthKey: string) {
 
       const data =await  this.prisma.planItem.findMany({
@@ -188,7 +259,50 @@ async deleteGroup(id: number) {
   return { ok: true };
 }
 
-  
+  async updateItem(id: number, dto: UpdateItemDto) {
+    const existing = await this.prisma.planItem.findUnique({
+      where: { id },
+      include: { group: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Item not found');
+    }
+
+    const updated = await this.prisma.planItem.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.amount !== undefined ? { amount: dto.amount } : {}),
+        ...(dto.note !== undefined ? { note: dto.note } : {}),
+        ...(dto.date !== undefined ? { date: dto.date } : {}),
+      },
+      include: { group: true },
+    });
+
+    return {
+      message: 'Item updated successfully',
+      data: updated,
+    };
+  }
+
+  async deleteItem(id: number) {
+    const existing = await this.prisma.planItem.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Item not found');
+    }
+
+    await this.prisma.planItem.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Item deleted successfully',
+    };
+  }
     
 
 }
