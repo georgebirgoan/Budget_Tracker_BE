@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-//LOCLA AUTH GUARDS
 @Injectable()
-export class LocalAuthGuard extends AuthGuard('local') {}
+export class LocalAuthGuard extends AuthGuard('local') {
+  handleRequest(err: any, user: any, info: any) {
+    if (err) throw err;
+    if (!user) throw new UnauthorizedException(info?.message ?? 'Email sau parola gresite!');
+    return user;
+  }
+}

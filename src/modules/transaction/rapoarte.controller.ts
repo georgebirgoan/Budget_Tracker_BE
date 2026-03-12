@@ -3,6 +3,7 @@ import { Get } from "@nestjs/common";
 import { RapoarteService } from "./rapoarte.service";
 import { Param } from "@nestjs/common";
 import { TransactionDto } from "./dto/transaction.dto";
+import { UpdateTransactionDto } from "./dto/updateDto";
 
 
 
@@ -33,7 +34,7 @@ export class RapoarteController{
  }
 
  @Patch(":id")
-updateTransaction(@Param("id", ParseIntPipe) id: number, @Body() dto: TransactionDto) {
+updateTransaction(@Param("id", ParseIntPipe) id: number, @Body() dto: UpdateTransactionDto) {
   return this.rapoarteService.updateTransaction(id, dto);
 }
 

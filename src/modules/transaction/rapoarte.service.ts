@@ -2,6 +2,7 @@ import { Injectable,Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Prisma } from "@prisma/client";
 import { TransactionDto } from "./dto/transaction.dto";
+import { UpdateTransactionDto } from "./dto/updateDto";
 
 @Injectable()
 export class RapoarteService{
@@ -56,7 +57,7 @@ async deleteTransaction(id: number) {
     };
   }
 
-async updateTransaction(id: number, dto: TransactionDto) {
+async updateTransaction(id: number, dto: UpdateTransactionDto) {
   const updated = await this.prisma.transaction.update({
     where: { transactionId: id },
     data: dto,
