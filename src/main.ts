@@ -27,6 +27,7 @@ async function bootstrap() {
            'http://localhost:8081',
             'https://dasmar-fe.onrender.com',
             'http://172.20.10.9:8081',
+            'http://192.168.1.130:8081',
           ];
 
           if (!origin) {
