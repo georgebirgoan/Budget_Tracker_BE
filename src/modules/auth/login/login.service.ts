@@ -171,6 +171,7 @@ async setInCookie(res:Response,newAccessToken:string,newRefreshToken:string){
    
     return {
       message: 'Logare cu succes!',
+      accessToken,
       user: {
         id: user.id,
         email: user.email,

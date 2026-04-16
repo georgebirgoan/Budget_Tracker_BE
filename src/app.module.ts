@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RapoarteModule } from './modules/transaction/rapoarte.module';
 import { PlanModule } from './modules/plan/plan.module';
+import { ObjectivesModule } from './modules/objectives/objectives.module';
 import { JwtAuthGuard } from './modules/auth/common/guards/jwt-auth/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -25,7 +26,8 @@ import { APP_GUARD } from '@nestjs/core';
     AuthModule,
     UsersModule,
     RapoarteModule,
-    PlanModule
+    PlanModule,
+    ObjectivesModule,
   ],
   controllers: [AppController],
   providers:[AppService]
